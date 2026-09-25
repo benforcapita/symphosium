@@ -1,0 +1,7 @@
+# R01 stage-0 correction v2
+
+Base source revision `be10a1b79df723d6d7612b5651c8522704dafb2e`; LLD revision 2. Version 1 remains the section 4–18/Appendix A module matrix. `fixtures-v1/cases.json` now supplies eight **actual assertion-level, sanitized offline cases**, with exact reference test name and line, Rust target module and named test, input and expected result. `fixtures-v1/check_cases.py` validates unique IDs, nonempty cases and reference anchors. It passed: `validated 8 fixture anchors and schemas; runtime parity untested`.
+
+Coverage: scheduler sort/dispatch, required labels, closed blocker, GitLab paging/empty state and SSH target parsing. These are reference assertions transcribed into portable fixtures, not outputs captured by running Elixir. All values are synthetic from checked-in tests; no live payload or credential copied. The harness currently verifies structural traceability; Rust/runtime comparison harness remains to implement.
+
+The v1 manifest F01–F20 is **not fully converted**. Exact assertions remain to extract for configuration aliases/reload, prompt Liquid output, workspace hooks, local app-server frames, token accounting, HTTP envelopes, Linear/GitHub/Jira/Asana normalization and native tools, additional GitLab errors/tools, retry/reconciliation, and SSH cancellation/secrets. R01 remains Changes Required until full fixture map and reviewer verdict. No broad implementation is authorized by this correction alone.

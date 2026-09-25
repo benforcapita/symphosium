@@ -1,0 +1,839 @@
+{
+  "schema_version": 1,
+  "reference_sha": "be10a1b79df723d6d7612b5651c8522704dafb2e",
+  "sanitization": "Synthetic ticket identifiers, dates and hosts from checked-in offline tests; no credentials or live responses",
+  "cases": [
+    {
+      "id": "sort_priority_age",
+      "spec": "8.3",
+      "anchor": "elixir/test/symphony_elixir/workspace_and_config_test.exs:682",
+      "reference_test": "orchestrator sorts dispatch by priority then oldest created_at",
+      "rust_module": "orchestrator",
+      "rust_test": "sort_priority_age",
+      "input": {
+        "issues": [
+          {
+            "identifier": "MT-199",
+            "priority": 2,
+            "created_at": "2025-12-01T00:00:00Z"
+          },
+          {
+            "identifier": "MT-201",
+            "priority": 1,
+            "created_at": "2026-01-02T00:00:00Z"
+          },
+          {
+            "identifier": "MT-200",
+            "priority": 1,
+            "created_at": "2026-01-01T00:00:00Z"
+          }
+        ]
+      },
+      "expected": {
+        "identifiers": [
+          "MT-200",
+          "MT-201",
+          "MT-199"
+        ]
+      }
+    },
+    {
+      "id": "provider_blocked",
+      "spec": "8.2",
+      "anchor": "elixir/test/symphony_elixir/workspace_and_config_test.exs:720",
+      "reference_test": "provider-marked blocked issue is not dispatch-eligible",
+      "rust_module": "orchestrator",
+      "rust_test": "provider_blocked",
+      "input": {
+        "dispatchable": false,
+        "blocked_by": [
+          {
+            "identifier": "MT-1002",
+            "state": "In Progress"
+          }
+        ]
+      },
+      "expected": {
+        "dispatch": false
+      }
+    },
+    {
+      "id": "required_labels_casefold",
+      "spec": "8.2",
+      "anchor": "elixir/test/symphony_elixir/workspace_and_config_test.exs:763",
+      "reference_test": "issue without every required label is not dispatch-eligible",
+      "rust_module": "orchestrator",
+      "rust_test": "required_labels_casefold",
+      "input": {
+        "required_labels": [
+          "symphony",
+          "javascript"
+        ],
+        "variants": [
+          [
+            "symphony"
+          ],
+          [
+            "Symphony",
+            "JavaScript"
+          ]
+        ]
+      },
+      "expected": {
+        "dispatch": [
+          false,
+          true
+        ]
+      }
+    },
+    {
+      "id": "closed_blocker_ready",
+      "spec": "8.2",
+      "anchor": "elixir/test/symphony_elixir/workspace_and_config_test.exs:789",
+      "reference_test": "provider-marked ready issue remains dispatch-eligible",
+      "rust_module": "orchestrator",
+      "rust_test": "closed_blocker_ready",
+      "input": {
+        "dispatchable": true,
+        "blocked_by": [
+          {
+            "identifier": "MT-1004",
+            "state": "Closed"
+          }
+        ]
+      },
+      "expected": {
+        "dispatch": true
+      }
+    },
+    {
+      "id": "gitlab_paging",
+      "spec": "11.1",
+      "anchor": "elixir/test/symphony_elixir/gitlab_adapter_test.exs:162",
+      "reference_test": "client pages state reads, maps GitLab states, and drops malformed records",
+      "rust_module": "tracker::gitlab",
+      "rust_test": "gitlab_paging",
+      "input": {
+        "requested_states": [
+          " OPENED "
+        ],
+        "first_page_count": 100,
+        "first_page_closed_id": "99",
+        "first_page_malformed_title_id": "100",
+        "second_page_ids": [
+          "101"
+        ]
+      },
+      "expected": {
+        "count": 99,
+        "first_id": "1",
+        "last_id": "101",
+        "missing_id": "99",
+        "request_state": "opened",
+        "per_page": 100,
+        "pages": [
+          1,
+          2
+        ],
+        "malformed_count": 1
+      }
+    },
+    {
+      "id": "gitlab_empty_states",
+      "spec": "11.1",
+      "anchor": "elixir/test/symphony_elixir/gitlab_adapter_test.exs:162",
+      "reference_test": "client pages state reads, maps GitLab states, and drops malformed records",
+      "rust_module": "tracker::gitlab",
+      "rust_test": "gitlab_empty_states",
+      "input": {
+        "requested_states": []
+      },
+      "expected": {
+        "issues": [],
+        "http_requests": 0
+      }
+    },
+    {
+      "id": "ssh_ipv6_bracketed",
+      "spec": "Appendix A",
+      "anchor": "elixir/test/symphony_elixir/ssh_test.exs:6",
+      "reference_test": "run/3 keeps bracketed IPv6 host:port targets intact",
+      "rust_module": "agent::ssh",
+      "rust_test": "ssh_ipv6_bracketed",
+      "input": {
+        "target": "root@[::1]:2200",
+        "command": "printf ok"
+      },
+      "expected": {
+        "trace_contains": [
+          "-T -p 2200 root@[::1] bash -lc",
+          "printf ok"
+        ]
+      }
+    },
+    {
+      "id": "ssh_ipv6_unbracketed",
+      "spec": "Appendix A",
+      "anchor": "elixir/test/symphony_elixir/ssh_test.exs:26",
+      "reference_test": "run/3 leaves unbracketed IPv6-style targets unchanged",
+      "rust_module": "agent::ssh",
+      "rust_test": "ssh_ipv6_unbracketed",
+      "input": {
+        "target": "::1:2200",
+        "command": "printf ok"
+      },
+      "expected": {
+        "trace_contains": [
+          "-T ::1:2200 bash -lc"
+        ],
+        "trace_excludes": [
+          "-p 2200"
+        ]
+      }
+    },
+    {
+      "id": "config_aliases",
+      "spec": "5.3",
+      "anchor": "elixir/test/symphony_elixir/workspace_and_config_test.exs:1201",
+      "reference_test": "schema preserves adapter-owned provider config while keeping linear aliases compatible",
+      "rust_module": "config",
+      "rust_test": "config_aliases",
+      "input": {
+        "kind": "linear",
+        "provider": {
+          "endpoint": "https://linear.example.test/graphql",
+          "api_key": "SYNTHETIC_API_KEY_SENTINEL",
+          "project_slug": "provider-project",
+          "extra": {
+            "team": "platform"
+          }
+        }
+      },
+      "expected": {
+        "tracker_endpoint": "https://linear.example.test/graphql",
+        "tracker_api_key": "SYNTHETIC_API_KEY_SENTINEL",
+        "tracker_project_slug": "provider-project",
+        "secret_environment_names": [
+          "LINEAR_API_KEY"
+        ],
+        "provider": {
+          "endpoint": "https://linear.example.test/graphql",
+          "api_key": "SYNTHETIC_API_KEY_SENTINEL",
+          "project_slug": "provider-project",
+          "assignee": null,
+          "extra": {
+            "team": "platform"
+          }
+        }
+      },
+      "assertion_anchors": [
+        {
+          "line": 1202,
+          "contains": "assert {:ok, settings}"
+        },
+        {
+          "line": 1215,
+          "contains": "assert settings.tracker.endpoint"
+        },
+        {
+          "line": 1216,
+          "contains": "assert settings.tracker.api_key"
+        },
+        {
+          "line": 1217,
+          "contains": "assert settings.tracker.project_slug"
+        },
+        {
+          "line": 1218,
+          "contains": "assert settings.tracker.secret_environment_names"
+        },
+        {
+          "line": 1220,
+          "contains": "assert settings.tracker.provider"
+        },
+        {
+          "line": 1224,
+          "contains": "\"assignee\" => nil"
+        },
+        {
+          "line": 1225,
+          "contains": "\"extra\" =>"
+        }
+      ],
+      "synthetic_substitution": {
+        "reference_literal": "provider-token",
+        "fixture_literal": "SYNTHETIC_API_KEY_SENTINEL"
+      }
+    },
+    {
+      "id": "config_legacy_env_literal",
+      "spec": "6.1",
+      "anchor": "elixir/test/symphony_elixir/workspace_and_config_test.exs:1274",
+      "reference_test": "config no longer resolves legacy env: references",
+      "rust_module": "config",
+      "rust_test": "config_legacy_env_literal",
+      "input": {
+        "workspace_root": "env:SYMP_WORKSPACE_ROOT",
+        "api_key": "env:SYMP_LINEAR_API_KEY"
+      },
+      "expected": {
+        "workspace_root": "env:SYMP_WORKSPACE_ROOT",
+        "api_key": "env:SYMP_LINEAR_API_KEY"
+      }
+    },
+    {
+      "id": "reload_last_good",
+      "spec": "6.2",
+      "anchor": "elixir/test/symphony_elixir/extensions_test.exs:86",
+      "reference_test": "workflow store reloads changes, keeps last good workflow, and falls back when stopped",
+      "rust_module": "workflow",
+      "rust_test": "reload_last_good",
+      "input": {
+        "valid_prompt": "Second prompt",
+        "valid_interval_ms": 45000,
+        "invalid_yaml": "tracker: [",
+        "invalid_typed_interval": "nope"
+      },
+      "expected": {
+        "invalid_reload": "error",
+        "active_prompt": "Second prompt",
+        "active_interval_ms": 45000
+      }
+    },
+    {
+      "id": "prompt_liquid_issue_attempt",
+      "spec": "12.2",
+      "anchor": "elixir/test/symphony_elixir/core_test.exs:1305",
+      "reference_test": "prompt builder renders issue and attempt values from workflow template",
+      "rust_module": "workflow::prompt",
+      "rust_test": "prompt_liquid_issue_attempt",
+      "input": {
+        "template": "Ticket {{ issue.identifier }} {{ issue.title }} labels={{ issue.labels }} attempt={{ attempt }}",
+        "identifier": "S-1",
+        "title": "Refactor backend request path",
+        "labels": [
+          "backend"
+        ],
+        "attempt": 3
+      },
+      "expected": {
+        "contains": [
+          "Ticket S-1 Refactor backend request path",
+          "labels=backend",
+          "attempt=3"
+        ]
+      }
+    },
+    {
+      "id": "prompt_liquid_datetimes",
+      "spec": "12.2",
+      "anchor": "elixir/test/symphony_elixir/core_test.exs:1327",
+      "reference_test": "prompt builder renders issue datetime fields without crashing",
+      "rust_module": "workflow::prompt",
+      "rust_test": "prompt_liquid_datetimes",
+      "input": {
+        "identifier": "MT-697",
+        "created_at": "2026-02-26T18:06:48Z",
+        "updated_at": "2026-02-26T18:07:03Z"
+      },
+      "expected": {
+        "contains": [
+          "Ticket MT-697",
+          "created=2026-02-26T18:06:48Z",
+          "updated=2026-02-26T18:07:03Z"
+        ]
+      }
+    },
+    {
+      "id": "hook_lifecycle",
+      "spec": "9.4",
+      "anchor": "elixir/test/symphony_elixir/workspace_and_config_test.exs:865",
+      "reference_test": "workspace hooks support multiline YAML scripts and run at lifecycle boundaries",
+      "rust_module": "workspace",
+      "rust_test": "hook_lifecycle",
+      "input": {
+        "issue_identifier": "MT-HOOKS",
+        "after_create": "echo after_create",
+        "before_remove": "echo before_remove",
+        "create_calls": 2
+      },
+      "expected": {
+        "after_create_marker": "after_create\\n",
+        "after_create_count": 1,
+        "before_remove_marker": "before_remove\\n",
+        "workspace_exists_after_remove": false
+      }
+    },
+    {
+      "id": "hook_failure_cleanup",
+      "spec": "9.4",
+      "anchor": "elixir/test/symphony_elixir/workspace_and_config_test.exs:903",
+      "reference_test": "workspace remove continues when before_remove hook fails",
+      "rust_module": "workspace",
+      "rust_test": "hook_failure_cleanup",
+      "input": {
+        "issue_identifier": "MT-HOOKS-FAIL",
+        "before_remove_exit": "nonzero"
+      },
+      "expected": {
+        "remove": "ok",
+        "workspace_exists_after_remove": false
+      }
+    },
+    {
+      "id": "app_server_partial_lines",
+      "spec": "10.3",
+      "anchor": "elixir/test/symphony_elixir/app_server_test.exs:1187",
+      "reference_test": "app server buffers partial JSON lines until newline terminator",
+      "rust_module": "agent::app_server",
+      "rust_test": "app_server_partial_lines",
+      "input": {
+        "protocol": "newline-delimited JSON",
+        "frame_sequence": [
+          {
+            "request_index": 1,
+            "json_shape": {
+              "id": 1,
+              "result": {},
+              "padding": "a \u00d7 1100000"
+            },
+            "padding_bytes": 1100000,
+            "terminator": "newline",
+            "emission": "single printf with large payload; transport may fragment bytes"
+          },
+          {
+            "request_index": 2,
+            "json": {
+              "id": 2,
+              "result": {
+                "thread": {
+                  "id": "thread-91"
+                }
+              }
+            },
+            "terminator": "newline"
+          },
+          {
+            "request_index": 3,
+            "json": {
+              "id": 3,
+              "result": {
+                "turn": {
+                  "id": "turn-91"
+                }
+              }
+            },
+            "terminator": "newline"
+          },
+          {
+            "request_index": 4,
+            "json": {
+              "method": "turn/completed"
+            },
+            "terminator": "none; process exits"
+          }
+        ]
+      },
+      "expected": {
+        "large_frame_processed_after_newline": true,
+        "thread_id": "thread-91",
+        "turn_id": "turn-91",
+        "terminal_event": "turn/completed",
+        "run": "ok"
+      },
+      "assertion_anchors": [
+        {
+          "line": 1208,
+          "contains": "1100000"
+        },
+        {
+          "line": 1209,
+          "contains": "padding"
+        },
+        {
+          "line": 1212,
+          "contains": "thread-91"
+        },
+        {
+          "line": 1215,
+          "contains": "turn-91"
+        },
+        {
+          "line": 1218,
+          "contains": "turn/completed"
+        },
+        {
+          "line": 1245,
+          "contains": "assert {:ok, _result}"
+        }
+      ],
+      "reference_limit": "Reference test asserts successful run after emitting complete JSON lines. Transport fragmentation is implied by size; it does not separately assert a pre-newline callback boundary."
+    },
+    {
+      "id": "app_server_input_blocker",
+      "spec": "10.5",
+      "anchor": "elixir/test/symphony_elixir/app_server_test.exs:275",
+      "reference_test": "app server marks request-for-input events as a hard failure",
+      "rust_module": "agent::app_server",
+      "rust_test": "app_server_input_blocker",
+      "input": {
+        "event": "request-for-input"
+      },
+      "expected": {
+        "result": "hard_failure"
+      }
+    },
+    {
+      "id": "app_server_dynamic_tool",
+      "spec": "10.5",
+      "anchor": "elixir/test/symphony_elixir/app_server_test.exs:959",
+      "reference_test": "app server executes supported dynamic tool calls and returns the tool result",
+      "rust_module": "agent::app_server",
+      "rust_test": "app_server_dynamic_tool",
+      "input": {
+        "tool": "supported_dynamic_tool",
+        "issue_bound": true
+      },
+      "expected": {
+        "dispatch": "executed",
+        "response": "tool_result"
+      }
+    },
+    {
+      "id": "app_server_secret_env",
+      "spec": "15.3",
+      "anchor": "elixir/test/symphony_elixir/app_server_test.exs:1397",
+      "reference_test": "app server does not pass tracker credentials to the local Codex child",
+      "rust_module": "agent::app_server",
+      "rust_test": "app_server_secret_env",
+      "input": {
+        "environment_names": [
+          "LINEAR_API_KEY",
+          "SYMP_CUSTOM_LINEAR_API_KEY"
+        ],
+        "profile_sets_same_names": true
+      },
+      "expected": {
+        "child_receives_tracker_secrets": false
+      }
+    },
+    {
+      "id": "http_method_errors",
+      "spec": "13.7.2",
+      "anchor": "elixir/test/symphony_elixir/extensions_test.exs:381",
+      "reference_test": "phoenix observability api preserves 405, 404, and unavailable behavior",
+      "rust_module": "web::observability",
+      "rust_test": "http_method_errors",
+      "input": {
+        "method": "POST",
+        "path": "/api/v1/state"
+      },
+      "expected": {
+        "status": 405,
+        "error": {
+          "code": "method_not_allowed",
+          "message": "Method not allowed"
+        }
+      }
+    },
+    {
+      "id": "http_unknown_route",
+      "spec": "13.7.2",
+      "anchor": "elixir/test/symphony_elixir/extensions_test.exs:381",
+      "reference_test": "phoenix observability api preserves 405, 404, and unavailable behavior",
+      "rust_module": "web::observability",
+      "rust_test": "http_unknown_route",
+      "input": {
+        "method": "GET",
+        "path": "/unknown"
+      },
+      "expected": {
+        "status": 404,
+        "error": {
+          "code": "not_found",
+          "message": "Route not found"
+        }
+      }
+    },
+    {
+      "id": "http_unavailable_refresh",
+      "spec": "13.7.2",
+      "anchor": "elixir/test/symphony_elixir/extensions_test.exs:381",
+      "reference_test": "phoenix observability api preserves 405, 404, and unavailable behavior",
+      "rust_module": "web::observability",
+      "rust_test": "http_unavailable_refresh",
+      "input": {
+        "method": "POST",
+        "path": "/api/v1/refresh",
+        "orchestrator": "unavailable"
+      },
+      "expected": {
+        "status": 503,
+        "error": {
+          "code": "orchestrator_unavailable",
+          "message": "Orchestrator is unavailable"
+        }
+      }
+    },
+    {
+      "id": "http_snapshot_timeout",
+      "spec": "13.7.2",
+      "anchor": "elixir/test/symphony_elixir/extensions_test.exs:417",
+      "reference_test": "phoenix observability api preserves snapshot timeout behavior",
+      "rust_module": "web::observability",
+      "rust_test": "http_snapshot_timeout",
+      "input": {
+        "method": "GET",
+        "path": "/api/v1/state",
+        "snapshot_timeout_ms": 1
+      },
+      "expected": {
+        "status": 200,
+        "error": {
+          "code": "snapshot_timeout",
+          "message": "Snapshot timed out"
+        }
+      }
+    },
+    {
+      "id": "retry_normal_exit",
+      "spec": "8.4",
+      "anchor": "elixir/test/symphony_elixir/core_test.exs:1022",
+      "reference_test": "normal worker exit schedules active-state continuation retry",
+      "rust_module": "orchestrator",
+      "rust_test": "retry_normal_exit",
+      "input": {
+        "worker_exit": "normal",
+        "issue_state": "active"
+      },
+      "expected": {
+        "running": false,
+        "completed": true,
+        "retry_attempt": 1
+      }
+    },
+    {
+      "id": "retry_abnormal_exit",
+      "spec": "8.4",
+      "anchor": "elixir/test/symphony_elixir/core_test.exs:1062",
+      "reference_test": "abnormal worker exit increments retry attempt progressively",
+      "rust_module": "orchestrator",
+      "rust_test": "retry_abnormal_exit",
+      "input": {
+        "worker_exit": "boom",
+        "previous_attempt": 2
+      },
+      "expected": {
+        "retry_attempt": 3,
+        "error": "agent exited: :boom"
+      }
+    },
+    {
+      "id": "reconcile_nonactive",
+      "spec": "8.5",
+      "anchor": "elixir/test/symphony_elixir/core_test.exs:478",
+      "reference_test": "non-active issue state stops running agent without cleaning workspace",
+      "rust_module": "orchestrator",
+      "rust_test": "reconcile_nonactive",
+      "input": {
+        "prior_state": "active",
+        "refreshed_state": "non_active"
+      },
+      "expected": {
+        "worker_stopped": true,
+        "workspace_removed": false
+      }
+    },
+    {
+      "id": "reconcile_terminal",
+      "spec": "8.5",
+      "anchor": "elixir/test/symphony_elixir/core_test.exs:541",
+      "reference_test": "terminal issue state stops running agent before cleaning workspace",
+      "rust_module": "orchestrator",
+      "rust_test": "reconcile_terminal",
+      "input": {
+        "prior_state": "active",
+        "refreshed_state": "terminal"
+      },
+      "expected": {
+        "worker_stopped_before_cleanup": true,
+        "workspace_removed": true
+      }
+    },
+    {
+      "id": "ssh_remote_launch",
+      "spec": "Appendix A",
+      "anchor": "elixir/test/symphony_elixir/app_server_test.exs:1499",
+      "reference_test": "app server launches over ssh for remote workers",
+      "rust_module": "agent::ssh",
+      "rust_test": "ssh_remote_launch",
+      "input": {
+        "worker_mode": "ssh"
+      },
+      "expected": {
+        "launch_transport": "ssh"
+      }
+    },
+    {
+      "id": "token_total_preferred",
+      "spec": "13.5",
+      "anchor": "elixir/test/symphony_elixir/orchestrator_status_test.exs:472",
+      "reference_test": "orchestrator token accounting prefers total_token_usage over last_token_usage in token_count payloads",
+      "rust_module": "observability",
+      "rust_test": "token_total_preferred",
+      "input": {
+        "event": "token_count",
+        "has_total_token_usage": true,
+        "has_last_token_usage": true
+      },
+      "expected": {
+        "input_tokens": 200,
+        "output_tokens": 100,
+        "total_tokens": 300
+      }
+    },
+    {
+      "id": "token_last_only_ignored",
+      "spec": "13.5",
+      "anchor": "elixir/test/symphony_elixir/orchestrator_status_test.exs:634",
+      "reference_test": "orchestrator token accounting ignores last_token_usage without cumulative totals",
+      "rust_module": "observability",
+      "rust_test": "token_last_only_ignored",
+      "input": {
+        "event": "token_count",
+        "has_total_token_usage": false,
+        "has_last_token_usage": true
+      },
+      "expected": {
+        "input_tokens": 0,
+        "output_tokens": 0,
+        "total_tokens": 0
+      }
+    },
+    {
+      "id": "app_server_unsupported_tool",
+      "spec": "10.5",
+      "anchor": "elixir/test/symphony_elixir/app_server_test.exs:858",
+      "reference_test": "app server rejects unsupported dynamic tool calls without stalling",
+      "rust_module": "agent::app_server",
+      "rust_test": "app_server_unsupported_tool",
+      "input": {
+        "tool": "unsupported_dynamic_tool"
+      },
+      "expected": {
+        "run": "ok",
+        "tool_call": "rejected"
+      }
+    },
+    {
+      "id": "ssh_missing_binary",
+      "spec": "Appendix A",
+      "anchor": "elixir/test/symphony_elixir/ssh_test.exs:90",
+      "reference_test": "run/3 returns an error when ssh is unavailable",
+      "rust_module": "agent::ssh",
+      "rust_test": "ssh_missing_binary",
+      "input": {
+        "ssh_binary_available": false
+      },
+      "expected": {
+        "error": "ssh_not_found"
+      }
+    },
+    {
+      "id": "ssh_shell_quote",
+      "spec": "Appendix A",
+      "anchor": "elixir/test/symphony_elixir/ssh_test.exs:160",
+      "reference_test": "remote_shell_command/1 escapes embedded single quotes",
+      "rust_module": "agent::ssh",
+      "rust_test": "ssh_shell_quote",
+      "input": {
+        "command": "printf 'hello'"
+      },
+      "expected": {
+        "single_quotes_escaped": true
+      }
+    },
+    {
+      "id": "cli_guardrail",
+      "spec": "17.7",
+      "anchor": "elixir/test/symphony_elixir/cli_test.exs:8",
+      "reference_test": "returns the guardrails acknowledgement banner when the flag is missing",
+      "rust_module": "cli",
+      "rust_test": "cli_guardrail",
+      "input": {
+        "args": [
+          "WORKFLOW.md"
+        ],
+        "acknowledgement": false
+      },
+      "expected": {
+        "result": "error",
+        "banner_contains": [
+          "low key engineering preview",
+          "Codex will run without any guardrails"
+        ]
+      }
+    },
+    {
+      "id": "cli_default_workflow",
+      "spec": "5.1",
+      "anchor": "elixir/test/symphony_elixir/cli_test.exs:46",
+      "reference_test": "defaults to WORKFLOW.md when workflow path is missing",
+      "rust_module": "cli",
+      "rust_test": "cli_default_workflow",
+      "input": {
+        "args": [
+          "--i-understand-that-this-will-be-running-without-the-usual-guardrails"
+        ]
+      },
+      "expected": {
+        "workflow_path": "WORKFLOW.md"
+      }
+    },
+    {
+      "id": "workspace_symlink_escape",
+      "spec": "9.5",
+      "anchor": "elixir/test/symphony_elixir/workspace_and_config_test.exs:171",
+      "reference_test": "workspace rejects symlink escapes under the configured root",
+      "rust_module": "workspace",
+      "rust_test": "workspace_symlink_escape",
+      "input": {
+        "issue_path": "symlink_outside_root"
+      },
+      "expected": {
+        "create": "error"
+      }
+    },
+    {
+      "id": "stale_retry_timer",
+      "spec": "8.4",
+      "anchor": "elixir/test/symphony_elixir/core_test.exs:1141",
+      "reference_test": "stale retry timer messages do not consume newer retry entries",
+      "rust_module": "orchestrator",
+      "rust_test": "stale_retry_timer",
+      "input": {
+        "timer_generation": "old",
+        "retry_entry_generation": "new"
+      },
+      "expected": {
+        "new_retry_entry_retained": true
+      }
+    },
+    {
+      "id": "refresh_coalesces",
+      "spec": "8.1",
+      "anchor": "elixir/test/symphony_elixir/core_test.exs:1181",
+      "reference_test": "manual refresh coalesces repeated requests and ignores superseded ticks",
+      "rust_module": "orchestrator",
+      "rust_test": "refresh_coalesces",
+      "input": {
+        "refresh_requests": 2,
+        "superseded_tick": true
+      },
+      "expected": {
+        "coalesced": true,
+        "superseded_tick_ignored": true
+      }
+    }
+  ]
+}

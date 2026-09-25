@@ -1,0 +1,36 @@
+{
+  "schema_version": 1,
+  "authority": "PROJECT_LLD.md revision 2, section 2 agent bounded incremental framing and section 9 lifecycle tests",
+  "cases": [
+    {
+      "id": "pre_newline_no_completion",
+      "classification": "LLD-only strengthening of reference app_server_test.exs:1187; reference test does not assert this boundary separately",
+      "rust_module": "agent::app_server",
+      "rust_test": "pre_newline_no_completion",
+      "input": {
+        "phase_1": "deliver first half of a JSON frame with a 1,100,000-byte padding value and no newline",
+        "phase_2": "deliver remaining bytes and newline, then thread/turn/completed frames"
+      },
+      "expected": {
+        "after_phase_1": "no decoded frame and no completed run",
+        "after_phase_2": "frame decoded, thread-91 and turn-91 recorded, run completes"
+      }
+    },
+    {
+      "id": "scope_switch_with_claims",
+      "classification": "LLD-only section 1/4; no Elixir reference analogue",
+      "rust_module": "config",
+      "rust_test": "scope_switch_with_claims",
+      "input": {"active_claims": 1, "requested_scope_change": true},
+      "expected": {"reload": "actionable config error", "old_scope_retained": true}
+    },
+    {
+      "id": "separate_worker_secret_identity",
+      "classification": "LLD-only section 6; no Elixir reference analogue",
+      "rust_module": "agent",
+      "rust_test": "separate_worker_secret_identity",
+      "input": {"worker_identity": "separate OS/container identity"},
+      "expected": {"service_secret_files_readable": false, "database_socket_accessible": false}
+    }
+  ]
+}

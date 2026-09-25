@@ -1,0 +1,5 @@
+# R04 toolchain clarification addendum
+
+This addendum supersedes the R04 catalog's unqualified statement that a Rust toolchain is installed and usable through rustup. QA2's stage-0 review confirms direct `cargo`, `rustc`, `rustfmt`, and `clippy-driver` executables at the host's stable toolchain bin directory report versions, but the rustup shim is absent and Cargo reports missing component subcommands. The earlier `rustup run stable` claim is not reproducible in this environment. The baseline has no `Cargo.toml`; this establishes no project build or Rust gate pass.
+
+Treat toolchain status as partially verified only. Exact absolute host paths are omitted from this portable addendum. Resume validation only after an authorized execution environment supplies functioning Cargo subcommands and required cached dependencies; do not repeat network resolution attempts while DNS remains unavailable. Elixir/Mix reference checks also remain blocked because Mix/Elixir are unavailable in the inspected environment. No live provider/model calls were made.

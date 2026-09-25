@@ -1,0 +1,17 @@
+[package]
+name = "symphony-capability-spike"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+
+[dependencies]
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
+axum = "0.8"
+sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres"] }
+askama = "0.14"
+serde = { version = "1", features = ["derive"] }
+serde_yaml = "0.9"
+liquid = "0.26"
+pulldown-cmark = "0.13"
+ammonia = "4"
+argon2 = "0.5"
