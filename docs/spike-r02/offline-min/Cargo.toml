@@ -1,0 +1,9 @@
+[package]
+name = "symphosium-offline-min"
+version = "0.1.0"
+edition = "2024"
+license = "Apache-2.0"
+[dependencies]
+tokio = { version = "=1.53.1", features = ["macros", "rt-multi-thread"] }
+sqlx = { version = "=0.8.6", default-features = false, features = ["runtime-tokio", "postgres"] }
+serde = { version = "=1.0.229", features = ["derive"] }

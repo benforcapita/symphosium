@@ -24,7 +24,7 @@ All tickets priority P0 unless P1 shown. Complexity H/M/L. S0 discovery, S1 foun
 |---|---|---|---|---|---|---|---|
 | R00 | Isolated integration branch; preserve untracked HLD byte-for-byte; import design and PM plan; report paths, diff, local SHA and remote status without editing CEO worktree | L | 0.5–1 / 1–2 | none | Ops; PM | Q1 | S0 |
 | R01 | SPEC 4–18/Appendix A and reference extensions mapped to Rust modules, sanitized fixtures and named tests; every required behavior traceable; differences explicit | H | 4–7 / elapsed blocked pending fixtures | none; checkpoint R00 | S1; S2 | Q2 | S0 |
-| R02 | Rust dependency/capability spike proves Tokio/Axum/SQLx/template/YAML/Liquid/Markdown/auth choices, licenses, locked build and toolchain feasibility; four-target packaging risks and actual competence recorded | H | 3–6 / elapsed blocked by dependencies | none; checkpoint R00 | S1; S2 | Q2 | S0 |
+| R02 | Rust dependency/capability spike proves Tokio/Axum/SQLx/template/YAML/Liquid/Markdown/auth choices, licenses, locked build and toolchain feasibility; four-target packaging risks and actual competence recorded | H | 2–5 / elapsed blocked by dependencies | none; checkpoint R00 | S1; S2 | Q2 | S0 |
 | R03 | Adversarial scope/auth/lifecycle/isolation review; concrete threat tests and unresolved decisions sent to CTO | H | 2–3 / 3–4 | none | S2; CTO for decisions | Q1 | S0 |
 | R04 | Sanitized fixture inventory and documented offline reference commands; identify toolchain/live-suite blockers without claiming passes | L | 1–2 / 2–3 | none; final mapping R01 | J1; S1 | Q2 | S0 |
 | R05 | Cargo skeleton/config reload/CLI/prompt compatibility and external mode without DB; fmt/clippy/build and parity fixtures pass | H | 4–7 / 5–9 | R00–R03 | S1; S2 | Q2 | S1 |
@@ -44,7 +44,7 @@ All tickets priority P0 unless P1 shown. Complexity H/M/L. S0 discovery, S1 foun
 | R19 | Independent A1–A10 integrated acceptance; security/browser/performance/fault/reference gates and defect ledger; test planning starts S0 | H | 12–22 QA days / 6–12 final gate days, environment dependent | final gate R05–R18 | developers repair own defects; PM routes | Q1/Q2 | S0–S4 |
 | R20 | Release changelog/version/commit/tag and verified remote refs; CEO acceptance handoff with evidence and low issues | L | 0.5–1 / 1–2 | R19 Accepted; remote access | Ops; PM | Q1/Q2 signed SHA | S4 |
 
-Revised sizing after QA estimates: 81–138 person-days including QA (QA1 6–12, QA2 6–10), plus 0.5–1 contingent R03 rework day. Initial estimate was 75–126; previous revision was 79–134. R01 increased to 4–7 and R02 to 2–5 after actual discovery. Review overlaps are capacity-limited, not unlimited parallelism. Rework beyond estimates triggers reforecast, never reduced gates.
+Revised sizing after QA estimates: 80–137 person-days including QA (QA1 6–12, QA2 6–10), plus 0.5–1 contingent R03 rework day. Initial estimate was 75–126; previous revision was 79–134. R01 increased to 4–7 and R02 to 2–5 after actual discovery. Review overlaps are capacity-limited, not unlimited parallelism. Rework beyond estimates triggers reforecast, never reduced gates.
 
 ## Dependency-aware Gantt (relative working-day envelope)
 
@@ -92,15 +92,4 @@ Final canonical repository is the Source checkout above, not the earlier Operati
 
 R05/R12: immutable generation/claim serialization and drain failure blocks scope changes. R07/R16: transactional revocation locks, SSE pre-send authorization and <=15s revalidation. R08/R11: fresh attempt fence on every mutation/replay, empty-default explicit agent transition allowlist, stable scoped idempotency, documented lock order and <=3 retries. R13/R18: concrete worker filesystem/process isolation; fixed SSH helper/host verification, 5s heartbeat/30s lease, TERM10s/KILL5s and uncertain-exit fence. R07/R16: configured proxy CIDRs/hosts, cookie/CSRF rotation and rate limits. All details and exceptions remain those of LLD3 section11; QA tests T01–T13. Migration/rollback and previous-Rust requirement for builtin fallback are governed by section12.
 
-Existing 81–138 person-day sizing and Gantt remain provisional pending actual bounded build; no new spend/hire. Four Medium fixtures remain open, first repairs supplied and structurally verified, zero failed independent retests. Operations imports then QA2 retests integrated SHA. R02 build retry now assigned; R05 remains dependency-gated.
-
-
-## Canonical checkpoint and bounded build return
-
-PM verified linked integration worktree `/Users/benblum/.openmausbot/task-workspaces/cd435acf-e060-4630-82c2-2ae4213094bd/dba89769-72e3-4634-85e4-5ec2690e52af/symphosium-s0` HEAD 2472570251c646a0f1787fcf76d46279e300de56. Operations reports byte-identical designs, integrated repair1 and clean status. Canonical main source checkout remains at reference with original untracked designs; final source checkout integration contract still outstanding. Previous separate discovery SHA is provenance only.
-
-QA1 independently reviewed LLD3 decisions and found no normative ambiguity. Its T01–T13 numbering crosswalk needs the preserved R03 review; this is traceability work, not new architecture. QA2 repair1 retest now routed on 2472570. Four Medium defects stay open until verdict; failed retests remain zero.
-
-Senior1 R02 v3 reports locked Tokio/SQLx/Serde subset dev/release builds, run, 1/1 bounded-channel test and direct rustfmt pass on Darwin arm64. PM inspected execution log; these are developer results, not independent QA. Full spike still fails crates.io DNS for ammonia; cargo-clippy unavailable and driver substitution invalid. 18 of 140 locked package manifests absent from license inventory. No actual database connection/auth/web/security/browser/full-stack acceptance. R02 stays Changes Required with environment blocker. Estimate now 3–6 effort days, project forecast 81–138 plus 0.5–1 contingent design rework day; calendar remains uncommitted.
-
-Operations attempted verified-origin push and could not obtain GitHub username. Local canonical-linked commit is verified; remote publication is not. No upstream push/tag authorized. Next owners QA2 fixture retest; Operations subset/QA-plan checkpoint and bounded build-environment diagnosis; no repeated blind DNS retry or gate waiver.
+Existing 80–137 person-day sizing and Gantt remain provisional pending actual bounded build; no new spend/hire. Four Medium fixtures remain open, first repairs supplied and structurally verified, zero failed independent retests. Operations imports then QA2 retests integrated SHA. R02 build retry now assigned; R05 remains dependency-gated.
