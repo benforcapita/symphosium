@@ -13,3 +13,15 @@ Dependencies R06/R07 follow stable foundation contracts. Stage0 acceptance clear
 Canonical final repository: /Users/benblum/.openmausbot/task-workspaces/d6f30c19-02d5-4618-a1fe-3ce7aec47fd1/5f84a53f-c70a-4bd5-8fb4-338abf6c691d/symphony-linear.
 Accepted base worktree: /Users/benblum/.openmausbot/task-workspaces/cd435acf-e060-4630-82c2-2ae4213094bd/dba89769-72e3-4634-85e4-5ec2690e52af/symphosium-s0, branch ops/symphosium-s0.
 Origin verified benforcapita/symphosium; last push blocked by unavailable GitHub username. Local committed work continues. No release tag or publication claim.
+
+## R05 first implementation return
+
+Senior1 delivered 15 new rust/ files (1561 staged lines including lockfile) on isolated s1/r05-foundation from cd2a7e9; PM inspected staged diff and CLI/reload source. R05 state Review, not Accepted. Developer reports fmt/clippy/9 tests/release and synthetic-token CLI validation passed; independent review pending. CLI currently validates then exits and explicitly says orchestration unavailable. This is a foundation increment, not a runnable scheduler/product. Review must check full R05 contract coverage and intended deferrals rather than equating 9 passing tests with completion.
+
+Operations readiness-doc checkpoint febc0aec82b9bc8f75f4ccee3c770168c1c68987 reported; R05 patch awaits integration. Next owner Operations checkpoint, Senior2 technical review, then QA2 integrated acceptance. R06 remains dependency-gated. No source/reference overwrites or push claims.
+
+## Operations R05 integration checkpoint — 2026-09-26
+
+Operations integrated the supplied Senior1 patch (SHA-256 `47bb91a5cb1389d83658b8ea44891716044b4e0c2fa3c427facad75fa50bf03b`) as local code checkpoint `f64fa76ca47becb426defaf13d7925d1665b1cb7` on `ops/symphosium-s0`, parent `febc0aec82b9bc8f75f4ccee3c770168c1c68987`. The diff contains only 15 new `rust/` files (1,561 insertions). Integrated fmt, clippy, all 9 library tests, release build, and synthetic-key `--check` CLI smoke passed offline on Rust 1.97.1/Darwin arm64. Omitting `--check` returns the expected R05 dispatch-not-implemented message. Detailed commands/results: `docs/OPS_R05_INTEGRATION.md` in the integration worktree.
+
+R05 remains Review, not Accepted. Senior2 independent review and QA disposition on the integrated SHA remain pending. No product/release acceptance, push, or tag is claimed; no live tracker/model call or paid service was used. Operations made no downstream assignment.
