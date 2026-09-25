@@ -1,0 +1,212 @@
+{
+  "target": "aarch64-apple-darwin",
+  "locked_registry_packages": 269,
+  "target_registry_packages": 215,
+  "target_missing_manifest_or_license": [],
+  "other_target_missing_manifest_or_license": [
+    {
+      "name": "bumpalo",
+      "version": "3.20.3"
+    },
+    {
+      "name": "cpufeatures",
+      "version": "0.3.1"
+    },
+    {
+      "name": "etcetera",
+      "version": "0.8.0"
+    },
+    {
+      "name": "js-sys",
+      "version": "0.3.106"
+    },
+    {
+      "name": "libredox",
+      "version": "0.1.25"
+    },
+    {
+      "name": "plain",
+      "version": "0.2.3"
+    },
+    {
+      "name": "r-efi",
+      "version": "6.0.0"
+    },
+    {
+      "name": "redox_syscall",
+      "version": "0.5.18"
+    },
+    {
+      "name": "redox_syscall",
+      "version": "0.9.4"
+    },
+    {
+      "name": "wasi",
+      "version": "0.11.1+wasi-snapshot-preview1"
+    },
+    {
+      "name": "wasite",
+      "version": "0.1.0"
+    },
+    {
+      "name": "wasm-bindgen",
+      "version": "0.2.129"
+    },
+    {
+      "name": "wasm-bindgen-futures",
+      "version": "0.4.79"
+    },
+    {
+      "name": "wasm-bindgen-macro",
+      "version": "0.2.129"
+    },
+    {
+      "name": "wasm-bindgen-macro-support",
+      "version": "0.2.129"
+    },
+    {
+      "name": "wasm-bindgen-shared",
+      "version": "0.2.129"
+    },
+    {
+      "name": "web-sys",
+      "version": "0.3.106"
+    },
+    {
+      "name": "web-time",
+      "version": "1.1.0"
+    },
+    {
+      "name": "windows-link",
+      "version": "0.2.1"
+    },
+    {
+      "name": "windows-sys",
+      "version": "0.48.0"
+    },
+    {
+      "name": "windows-sys",
+      "version": "0.52.0"
+    },
+    {
+      "name": "windows-sys",
+      "version": "0.61.2"
+    },
+    {
+      "name": "windows-targets",
+      "version": "0.48.5"
+    },
+    {
+      "name": "windows-targets",
+      "version": "0.52.6"
+    },
+    {
+      "name": "windows_aarch64_gnullvm",
+      "version": "0.48.5"
+    },
+    {
+      "name": "windows_aarch64_gnullvm",
+      "version": "0.52.6"
+    },
+    {
+      "name": "windows_aarch64_msvc",
+      "version": "0.48.5"
+    },
+    {
+      "name": "windows_aarch64_msvc",
+      "version": "0.52.6"
+    },
+    {
+      "name": "windows_i686_gnu",
+      "version": "0.48.5"
+    },
+    {
+      "name": "windows_i686_gnu",
+      "version": "0.52.6"
+    },
+    {
+      "name": "windows_i686_gnullvm",
+      "version": "0.52.6"
+    },
+    {
+      "name": "windows_i686_msvc",
+      "version": "0.48.5"
+    },
+    {
+      "name": "windows_i686_msvc",
+      "version": "0.52.6"
+    },
+    {
+      "name": "windows_x86_64_gnu",
+      "version": "0.48.5"
+    },
+    {
+      "name": "windows_x86_64_gnu",
+      "version": "0.52.6"
+    },
+    {
+      "name": "windows_x86_64_gnullvm",
+      "version": "0.48.5"
+    },
+    {
+      "name": "windows_x86_64_gnullvm",
+      "version": "0.52.6"
+    },
+    {
+      "name": "windows_x86_64_msvc",
+      "version": "0.48.5"
+    },
+    {
+      "name": "windows_x86_64_msvc",
+      "version": "0.52.6"
+    },
+    {
+      "name": "zerocopy-derive",
+      "version": "0.8.59"
+    }
+  ],
+  "target_license_counts": {
+    "(MIT OR Apache-2.0) AND Unicode-3.0": 1,
+    "Apache-2.0": 1,
+    "Apache-2.0 AND ISC": 1,
+    "Apache-2.0 OR BSL-1.0": 1,
+    "Apache-2.0 OR BSL-1.0 OR MIT": 1,
+    "Apache-2.0 OR ISC OR MIT": 2,
+    "Apache-2.0 OR MIT": 13,
+    "BSD-2-Clause OR Apache-2.0 OR MIT": 1,
+    "BSD-3-Clause": 1,
+    "CDLA-Permissive-2.0": 1,
+    "ISC": 2,
+    "MIT": 36,
+    "MIT AND BSD-3-Clause": 1,
+    "MIT OR Apache-2.0": 122,
+    "MIT/Apache-2.0": 6,
+    "MPL-2.0": 2,
+    "Unicode-3.0": 18,
+    "Unlicense OR MIT": 3,
+    "Zlib": 1,
+    "Zlib OR Apache-2.0 OR MIT": 1
+  },
+  "notable_expressions": [
+    {
+      "name": "cssparser",
+      "version": "0.38.0",
+      "license": "MPL-2.0"
+    },
+    {
+      "name": "dtoa-short",
+      "version": "0.3.5",
+      "license": "MPL-2.0"
+    },
+    {
+      "name": "matchit",
+      "version": "0.8.4",
+      "license": "MIT AND BSD-3-Clause"
+    },
+    {
+      "name": "webpki-roots",
+      "version": "1.0.9",
+      "license": "CDLA-Permissive-2.0"
+    }
+  ]
+}
