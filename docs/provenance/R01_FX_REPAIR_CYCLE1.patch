@@ -1,0 +1,268 @@
+--- a/docs/fixtures-v1/cases.json
++++ b/docs/fixtures-v1/cases.json
+@@ -202,6 +202,7 @@
+         "kind": "linear",
+         "provider": {
+           "endpoint": "https://linear.example.test/graphql",
++          "api_key": "SYNTHETIC_API_KEY_SENTINEL",
+           "project_slug": "provider-project",
+           "extra": {
+             "team": "platform"
+@@ -209,14 +210,59 @@
+         }
+       },
+       "expected": {
+-        "endpoint": "https://linear.example.test/graphql",
+-        "project_slug": "provider-project",
+-        "extra": {
+-          "team": "platform"
+-        },
++        "tracker_endpoint": "https://linear.example.test/graphql",
++        "tracker_api_key": "SYNTHETIC_API_KEY_SENTINEL",
++        "tracker_project_slug": "provider-project",
+         "secret_environment_names": [
+           "LINEAR_API_KEY"
+-        ]
++        ],
++        "provider": {
++          "endpoint": "https://linear.example.test/graphql",
++          "api_key": "SYNTHETIC_API_KEY_SENTINEL",
++          "project_slug": "provider-project",
++          "assignee": null,
++          "extra": {
++            "team": "platform"
++          }
++        }
++      },
++      "assertion_anchors": [
++        {
++          "line": 1202,
++          "contains": "assert {:ok, settings}"
++        },
++        {
++          "line": 1215,
++          "contains": "assert settings.tracker.endpoint"
++        },
++        {
++          "line": 1216,
++          "contains": "assert settings.tracker.api_key"
++        },
++        {
++          "line": 1217,
++          "contains": "assert settings.tracker.project_slug"
++        },
++        {
++          "line": 1218,
++          "contains": "assert settings.tracker.secret_environment_names"
++        },
++        {
++          "line": 1220,
++          "contains": "assert settings.tracker.provider"
++        },
++        {
++          "line": 1224,
++          "contains": "\"assignee\" => nil"
++        },
++        {
++          "line": 1225,
++          "contains": "\"extra\" =>"
++        }
++      ],
++      "synthetic_substitution": {
++        "reference_literal": "provider-token",
++        "fixture_literal": "SYNTHETIC_API_KEY_SENTINEL"
+       }
+     },
+     {
+@@ -342,14 +388,86 @@
+       "rust_module": "agent::app_server",
+       "rust_test": "app_server_partial_lines",
+       "input": {
+-        "initial_frame_bytes": 1100000,
++        "protocol": "newline-delimited JSON",
++        "frame_sequence": [
++          {
++            "request_index": 1,
++            "json_shape": {
++              "id": 1,
++              "result": {},
++              "padding": "a \u00d7 1100000"
++            },
++            "padding_bytes": 1100000,
++            "terminator": "newline",
++            "emission": "single printf with large payload; transport may fragment bytes"
++          },
++          {
++            "request_index": 2,
++            "json": {
++              "id": 2,
++              "result": {
++                "thread": {
++                  "id": "thread-91"
++                }
++              }
++            },
++            "terminator": "newline"
++          },
++          {
++            "request_index": 3,
++            "json": {
++              "id": 3,
++              "result": {
++                "turn": {
++                  "id": "turn-91"
++                }
++              }
++            },
++            "terminator": "newline"
++          },
++          {
++            "request_index": 4,
++            "json": {
++              "method": "turn/completed"
++            },
++            "terminator": "none; process exits"
++          }
++        ]
++      },
++      "expected": {
++        "large_frame_processed_after_newline": true,
+         "thread_id": "thread-91",
+         "turn_id": "turn-91",
+-        "terminal_event": "turn/completed"
+-      },
+-      "expected": {
++        "terminal_event": "turn/completed",
+         "run": "ok"
+-      }
++      },
++      "assertion_anchors": [
++        {
++          "line": 1208,
++          "contains": "1100000"
++        },
++        {
++          "line": 1209,
++          "contains": "padding"
++        },
++        {
++          "line": 1212,
++          "contains": "thread-91"
++        },
++        {
++          "line": 1215,
++          "contains": "turn-91"
++        },
++        {
++          "line": 1218,
++          "contains": "turn/completed"
++        },
++        {
++          "line": 1245,
++          "contains": "assert {:ok, _result}"
++        }
++      ],
++      "reference_limit": "Reference test asserts successful run after emitting complete JSON lines. Transport fragmentation is implied by size; it does not separately assert a pre-newline callback boundary."
+     },
+     {
+       "id": "app_server_input_blocker",
+--- a/docs/fixtures-v1/check_cases.py
++++ b/docs/fixtures-v1/check_cases.py
+@@ -18,6 +18,8 @@
+     source = (reference / name).read_text().splitlines()
+     assert case['reference_test'] in source[int(line) - 1], case['id']
+     assert case['input'] and case['expected'] and case['rust_module'] and case['rust_test']
++    for assertion in case.get('assertion_anchors', []):
++        assert assertion['contains'] in source[assertion['line'] - 1], (case['id'], assertion)
+ index_path = root / 'fixtures-v1/reference_assertions.json'
+ if index_path.is_file():
+     index = json.loads(index_path.read_text())
+--- /dev/null
++++ b/docs/fixtures-v1/lld_only_tests.json
+@@ -0,0 +1,36 @@
++{
++  "schema_version": 1,
++  "authority": "PROJECT_LLD.md revision 2, section 2 agent bounded incremental framing and section 9 lifecycle tests",
++  "cases": [
++    {
++      "id": "pre_newline_no_completion",
++      "classification": "LLD-only strengthening of reference app_server_test.exs:1187; reference test does not assert this boundary separately",
++      "rust_module": "agent::app_server",
++      "rust_test": "pre_newline_no_completion",
++      "input": {
++        "phase_1": "deliver first half of a JSON frame with a 1,100,000-byte padding value and no newline",
++        "phase_2": "deliver remaining bytes and newline, then thread/turn/completed frames"
++      },
++      "expected": {
++        "after_phase_1": "no decoded frame and no completed run",
++        "after_phase_2": "frame decoded, thread-91 and turn-91 recorded, run completes"
++      }
++    },
++    {
++      "id": "scope_switch_with_claims",
++      "classification": "LLD-only section 1/4; no Elixir reference analogue",
++      "rust_module": "config",
++      "rust_test": "scope_switch_with_claims",
++      "input": {"active_claims": 1, "requested_scope_change": true},
++      "expected": {"reload": "actionable config error", "old_scope_retained": true}
++    },
++    {
++      "id": "separate_worker_secret_identity",
++      "classification": "LLD-only section 6; no Elixir reference analogue",
++      "rust_module": "agent",
++      "rust_test": "separate_worker_secret_identity",
++      "input": {"worker_identity": "separate OS/container identity"},
++      "expected": {"service_secret_files_readable": false, "database_socket_accessible": false}
++    }
++  ]
++}
+--- /dev/null
++++ b/docs/R01_RUNTIME_GAP_MAP_v4.md
+@@ -0,0 +1,31 @@
++# R01 runtime/config/observability/security gap map — repair cycle 1
++
++Source baseline `be10a1b79df723d6d7612b5651c8522704dafb2e`; LLD revision 2. This map closes the *discovery mapping* omission. Each row is a checked-in offline reference scenario and a planned Rust test. It is not executed parity. The `fixtures-v1/reference_assertions.json` index gives assertion-start anchors; normalized cases with `assertion_anchors` are required before a case is used as a golden comparison. Provider mapping is assigned to Mid1 and is excluded here.
++
++| Area / required behavior | Exact reference scenario anchor | Planned Rust test/module | Evidence still needed |
++| --- | --- | --- | --- |
++| Config defaults/validation | `core_test.exs:4` | `config::defaults_validation` | normalized defaults/error fixture |
++| WORKFLOW discovery/front matter | `core_test.exs:169,193,201,209` | `workflow::discovery_frontmatter` | normal/unterminated/non-map cases |
++| Env reference and alias rules | `workspace_and_config_test.exs:1169,1201,1274` | `config::env_alias_contract` | FX-001 corrected fixture plus env cases |
++| Per-state concurrency | `workspace_and_config_test.exs:1301` | `config::per_state_limits` | normalized limits fixture |
++| Policy keys/sandbox resolution | `workspace_and_config_test.exs:1372,1418,1485,1542` | `config::sandbox_policy_contract` | exact policy cases |
++| Last-good reload | `extensions_test.exs:86` | `workflow::last_good_reload` | compare reload transcript |
++| Prompt Liquid/datetime/nested values | `core_test.exs:1305,1327`; `workspace_and_config_test.exs:1594` | `workflow::prompt_contract` | nested structure fixture and exact render |
++| Workspace collision/path/symlink | `workspace_and_config_test.exs:83,171,199,235,262,1533` | `workspace::containment_contract` | path outcome matrix |
++| Hooks create/remove/failure/timeout | `workspace_and_config_test.exs:865,903,928,953` | `workspace::hook_lifecycle_contract` | exact call/cleanup transcript |
++| Scheduler dispatch/revalidation | `workspace_and_config_test.exs:682,720,741,763,789,810,837` | `orchestrator::dispatch_contract` | selected order and negative gates |
++| Reconciliation/terminal cleanup | `core_test.exs:478,541,618,685,763,803,850,897` | `orchestrator::reconcile_contract` | stop-before-cleanup, absent issue, reassignment |
++| Retry/backoff/stale timer | `core_test.exs:1022,1062,1102,1141,1181` | `orchestrator::retry_contract` | timing and generation assertions |
++| Local wire framing/timeout/parser | `app_server_test.exs:79,1187,1326` | `agent::app_server::wire_contract` | FX-002 corrected frame transcript; malformed lines |
++| Approval/input/MCP | `app_server_test.exs:275,354,419,482,619,718,788` | `agent::app_server::approval_contract` | allow/deny input cases |
++| Dynamic tools | `app_server_test.exs:858,959,1081` | `agent::app_server::tool_contract` | exact envelope/error frames |
++| Local child secret env | `app_server_test.exs:1397` | `agent::app_server::secret_env_contract` | denied names/profile inheritance |
++| SSH parse/launch/framing | `ssh_test.exs:6,26,46,70,90,105,135,160`; `app_server_test.exs:1499` | `agent::ssh::transport_contract` | binary/line output and cancellation |
++| Token accounting cumulative/last | `orchestrator_status_test.exs:203,278,472,560,634` | `observability::token_accounting` | monotonic totals and rate payloads |
++| Snapshot retry/poll/status | `orchestrator_status_test.exs:717,757,802,854,903,975` | `observability::snapshot_contract` | exact snapshot and stalled-worker states |
++| HTTP state/issue/refresh/errors | `extensions_test.exs:242,381,417,579` | `web::observability::api_contract` | complete JSON payloads and invalid-host results |
++| CLI flags/path/startup | `cli_test.exs:8,46,58,82,101,114,128` | `cli::startup_contract` | full flag/error fixture |
++
++## LLD-only cases with no reference analogue
++
++`fixtures-v1/lld_only_tests.json` separately defines `pre_newline_no_completion` (stronger framing boundary), `scope_switch_with_claims`, and `separate_worker_secret_identity`. Other LLD-only acceptance cases remain SQLx transaction integrity, PM auth/CSRF/session revocation, scoped builtin tools, database outage failure, and run projection. These belong to R05–R19 implementation/QA; they must never be described as passing reference fixtures. SSH cancellation/secret forwarding require new Rust/LLD tests even where the reference has a launch case. This map is for stage-0 planning, not a substitute for executable evidence.
+--- /dev/null
++++ b/docs/R01_FX_REPAIR_CYCLE1.md
+@@ -0,0 +1,13 @@
++# R01 FX-001/FX-002 repair cycle 1
++
++Project: Symphony Rust S0 R01. Reference baseline `be10a1b79df723d6d7612b5651c8522704dafb2e`; PM-reported integrated discovery base `2d5d6dce6627d3d6f373f5cd991cb2fd84c5de68` in `symphony-stage0-consolidated`. These edits are in Senior1's isolated task workspace, not integrated or QA retested.
++
++## Changes
++
++- FX-001: `fixtures-v1/cases.json` `config_aliases` now includes a synthetic API-key sentinel, exact top-level endpoint/API-key/project alias expectations, secret environment names, and complete normalized provider map including null assignee and extra data. `assertion_anchors` point to `workspace_and_config_test.exs:1202,1215–1218,1220,1224–1225`. The source test uses a distinct checked-in dummy literal; `synthetic_substitution` declares the fixture substitution.
++- FX-002: `app_server_partial_lines` now represents four ordered emitted JSON lines: 1,100,000 padding bytes, thread ID, turn ID, and terminal event with process exit. Its anchors are `app_server_test.exs:1208–1209,1212,1215,1218,1245`. The reference asserts a successful run after complete lines; it does **not** separately assert non-completion before newline. `fixtures-v1/lld_only_tests.json` therefore states the stronger pre-newline boundary as an LLD-only Rust test, without inventing a reference assertion.
++- `fixtures-v1/check_cases.py` verifies each new assertion-line fragment. `R01_RUNTIME_GAP_MAP_v4.md` maps 92 exact runtime/config/observability/security reference scenario anchors to planned Rust tests and later evidence; LLD-only categories are explicit. Provider repairs remain Mid1's assignment.
++
++## Checks and status
++
++`python3 fixtures-v1/check_cases.py --reference-root <baseline checkout>` passed 38 fixture anchors/schemas plus assertion anchors. `python3 -m json.tool fixtures-v1/lld_only_tests.json` passed. A script verified all 92 reference scenario lines in the map begin with `test`. These are structural checks only. No Elixir/Rust runtime test, build, network retry, QA retest, or integration commit occurred. FX-001/FX-002 remain open until Operations integrates and QA2 independently retests the integrated SHA. Repair/retest failure count remains zero before that retest; do not self-close them.

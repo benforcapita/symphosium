@@ -7,10 +7,11 @@ Repository: canonical Symphosium source repo, origin `https://github.com/benforc
 - Preservation commit: `5998f31f69d276d8b44ed3fbffdba3ca2f66f45f`, parent baseline. It adds only the previously untracked HLD and LLD revision 3 byte-for-byte.
 - Current repair checkpoint: the full SHA is the commit that adds this manifest and the listed artifacts; its parent is the preservation commit above.
 - Prior discovery commit imported selectively from the Operations discovery checkout: `2d5d6dce6627d3d6f373f5cd991cb2fd84c5de68`. Relevant discovery files are retained in `docs/provenance/prior-stage0/`; active fixture data is integrated under `docs/fixtures-v1/` and `docs/fixtures-provider-v1/`. Prior LLD2 plan/design files were not copied over LLD3.
+- Publication attempt: normal push to verified origin was blocked because Git could not obtain a GitHub username with terminal prompts disabled. No remote update is claimed; the integration branch remains local.
 
 ## Repair inputs and operations
 
-- Senior 1 repair patch: `R01_FX_REPAIR_CYCLE1.patch`, expected SHA-256 `56cc38b66512777e1d6eff04271e5a9440edc64f38660b40c2965231b542da2b`. `git apply --check` passed before application. Patch was applied only to `docs/fixtures-v1/cases.json`; FX-001 and FX-002 remain open until independent QA2 retest.
+- Senior 1 repair patch: `docs/provenance/R01_FX_REPAIR_CYCLE1.patch` (original filename `R01_FX_REPAIR_CYCLE1.patch`), SHA-256 `56cc38b66512777e1d6eff04271e5a9440edc64f38660b40c2965231b542da2b`. `git apply --check` passed before application. Patch was applied only to `docs/fixtures-v1/cases.json`; FX-001 and FX-002 remain open until independent QA2 retest.
 - Senior 1 companion artifacts: `R01_FX_REPAIR_CYCLE1.md`, `R01_RUNTIME_GAP_MAP_v4.md`, `R01_PARITY_MATRIX_v3.md`, `R02_EXECUTION_LOG_v3.md`, `fixtures-v1/lld_only_tests.json`, `fixtures-v1/reference_assertions.json`, `fixtures-v1/COMPLETENESS.md`, and `fixtures-v1/build_reference_index.py`.
 - Mid 1 provider corpus imported separately, without overwriting runtime fixtures: `fixtures-provider-v1/{cases.json,check_cases.py,COVERAGE_MANIFEST.md}`.
 - Latest PM `DELIVERY_PLAN.md`, `STAGE0_REVIEW.md`, routing document `DEFECT_ROUTING.md`, and QA2 `QA2_STAGE0_REVIEW.md` were copied from their named source paths byte-for-byte. Their checksums are recorded below.
