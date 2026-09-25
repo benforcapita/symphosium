@@ -31,3 +31,9 @@ Operations inputs:
 FX-002 provenance distinction needs QA attention: Senior1 reports the reference test asserts successful handling of complete lines but not a separate pre-newline non-completion check. Stronger pre-newline behavior is explicitly represented as LLD-only instead of falsely attributing it to a reference assertion. QA2 must verify both attribution and the proposed test boundary.
 
 Next sequence: Operations reviewed local integration/checkpoint → QA2 independent retest on resulting SHA → PM disposition. No repaired integrated SHA yet. Room handoff budget was exhausted on last Operations attempt; if it persists, parent CTO must resume this exact handoff through an available coordination context. Do not bypass Operations or QA ownership.
+
+## Independent repair1 disposition
+
+QA2 closed FX001–004 at fixture-review level on 2472570251c646a0f1787fcf76d46279e300de56, with manual reference comparisons in QA2_R01_REPAIR1_RETEST.md and QA2_R01_FIXTURE_DEFECT_LEDGER.md in its existing workspace. Failed retests: 0. This supersedes the open status above for those exact fixture hashes only. R01 remains Changes Required for explicit coverage-map gaps; R02 is separate. No implementation acceptance.
+
+Operations reports newer 5dffc4048c0a3bb8a15e9350fcad7ee00c7dc69f checkpoint. Full spike lock/dev/release build and fmt/clippy now pass after approved network access and proper PATH. cargo run fails Askama assertion, and zero tests exist. Current R02 next action is developer correction and real capability tests, not repeating the superseded DNS diagnosis. Closed fixture evidence must be preserved unchanged.
