@@ -12,6 +12,7 @@ use std::{
 pub struct Snapshot {
     pub generation: u64,
     pub settings: Settings,
+    pub scope: crate::config::Scope,
     source: String,
 }
 
@@ -53,12 +54,20 @@ pub enum ReloadError {
 
 impl GenerationManager {
     pub fn new(path: impl AsRef<Path>) -> Result<Self, ReloadError> {
+        Self::new_with_env(path, |name| std::env::var(name).ok())
+    }
+
+    pub fn new_with_env(
+        path: impl AsRef<Path>,
+        env: impl Fn(&str) -> Option<String>,
+    ) -> Result<Self, ReloadError> {
         let path = path.as_ref().to_path_buf();
         let workflow = workflow::load(&path)?;
-        let settings = Settings::from_workflow(&workflow, &path)?;
+        let settings = Settings::from_workflow_with_env(&workflow, &path, env)?;
         prompt::validate(&settings.prompt_template)?;
         let current = Arc::new(Snapshot {
             generation: 1,
+            scope: settings.scope(),
             settings,
             source: workflow.source,
         });
@@ -90,18 +99,31 @@ impl GenerationManager {
     }
 
     pub fn reload(&self) -> Result<bool, ReloadError> {
+        self.reload_with_env(|name| std::env::var(name).ok())
+    }
+
+    pub fn reload_with_env(
+        &self,
+        env: impl Fn(&str) -> Option<String>,
+    ) -> Result<bool, ReloadError> {
         let workflow = workflow::load(&self.path)?;
-        let settings = Settings::from_workflow(&workflow, &self.path)?;
+        let settings = Settings::from_workflow_with_env(&workflow, &self.path, env)?;
         prompt::validate(&settings.prompt_template)?;
         let mut state = self.state.lock().expect("generation mutex poisoned");
-        if workflow.source == state.current.source {
+        let scope = settings.scope();
+        if workflow.source == state.current.source
+            && scope == state.current.scope
+            && settings.tracker.resolved_api_key == state.current.settings.tracker.resolved_api_key
+            && settings.workspace_root == state.current.settings.workspace_root
+        {
             return Ok(false);
         }
-        if state.active_claims > 0 && settings.scope() != state.current.settings.scope() {
+        if state.active_claims > 0 && scope != state.current.scope {
             return Err(ReloadError::ScopeBusy);
         }
         state.current = Arc::new(Snapshot {
             generation: state.current.generation + 1,
+            scope,
             settings,
             source: workflow.source,
         });
@@ -149,5 +171,34 @@ mod tests {
         fs::write(&path, "---\ntracker: [\n---\n").unwrap();
         assert!(manager.reload().is_err());
         assert_eq!(manager.current().generation, 1);
+    }
+    #[test]
+    fn env_scope_change_is_fenced_even_when_file_is_unchanged() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("WORKFLOW.md");
+        fs::write(&path, "---\ntracker:\n  kind: linear\n  provider:\n    project_slug: $PROJECT\n    assignee: $ASSIGN\n    api_key: token\n---\n").unwrap();
+        let environment = |project: &str, assignee: &str| {
+            let project = project.to_owned();
+            let assignee = assignee.to_owned();
+            move |name: &str| match name {
+                "PROJECT" => Some(project.clone()),
+                "ASSIGN" => Some(assignee.clone()),
+                _ => None,
+            }
+        };
+        let manager = GenerationManager::new_with_env(&path, environment("p1", "a1")).unwrap();
+        let claim = manager.admit_claim();
+        assert!(matches!(
+            manager.reload_with_env(environment("p1", "a2")),
+            Err(ReloadError::ScopeBusy)
+        ));
+        assert!(matches!(
+            manager.reload_with_env(environment("p2", "a1")),
+            Err(ReloadError::ScopeBusy)
+        ));
+        assert_eq!(manager.current().scope.assignee.as_deref(), Some("a1"));
+        drop(claim);
+        assert!(manager.reload_with_env(environment("p1", "a2")).unwrap());
+        assert_eq!(manager.current().scope.assignee.as_deref(), Some("a2"));
     }
 }

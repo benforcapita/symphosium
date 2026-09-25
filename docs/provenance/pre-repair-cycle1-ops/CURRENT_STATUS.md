@@ -27,12 +27,3 @@ Operations readiness-doc checkpoint febc0aec82b9bc8f75f4ccee3c770168c1c68987 rep
 Operations integrated the supplied Senior1 patch (SHA-256 `47bb91a5cb1389d83658b8ea44891716044b4e0c2fa3c427facad75fa50bf03b`) as local code checkpoint `f64fa76ca47becb426defaf13d7925d1665b1cb7` on `ops/symphosium-s0`, parent `febc0aec82b9bc8f75f4ccee3c770168c1c68987`. The diff contains only 15 new `rust/` files (1,561 insertions). Integrated fmt, clippy, all 9 library tests, release build, and synthetic-key `--check` CLI smoke passed offline on Rust 1.97.1/Darwin arm64. Omitting `--check` returns the expected R05 dispatch-not-implemented message. Detailed commands/results: `docs/OPS_R05_INTEGRATION.md` in the integration worktree.
 
 R05 remains Review, not Accepted. Senior2 independent review and QA disposition on the integrated SHA remain pending. No product/release acceptance, push, or tag is claimed; no live tracker/model call or paid service was used. Operations made no downstream assignment.
-
-
-## Repair cycle 1 returned — pending integration and retest
-
-PM read R05_REPAIR_CYCLE1_EVIDENCE.md and verified patch SHA-256 0a93a0bbab73a52ea36804d997440c88b2d796cb79527ec5fd7fe0fa64908c11. Six scoped files change: README, CLI, config, prompt, reload and review_contract tests. Developer reports pinned Rust 1.97.1 fmt/clippy/17 tests/release/CLI checks passing; PM did not independently execute those gates. Latest integration HEAD directly verified as 399c8ddc00f829e28c90af06dbb9979f4f3a234b; repair base is 3d1575da917587c9795090f0dc8e51f4de1a990d.
-
-Correction to S2-R05-005: reference elixir/lib/symphony_elixir/cli.ex lines 165 and 173 explicitly permit port >= 0. PM verified these lines. Port zero acceptance is compatible; do not require its rejection. Remaining CLI validation and startup override behavior still require review.
-
-All five findings remain open pending Senior2 re-review and QA2 on the repaired integrated SHA. No failed repair/retest cycle recorded yet. Operations is next owner to apply/checkpoint, then PM routes exact revision to reviewers. R05 remains Changes Required; dependent integration remains gated. Developer estimates remaining checkpoint/review 2.5–5 hours plus review reserve, excluding further rework; this is provisional, not a schedule commitment.

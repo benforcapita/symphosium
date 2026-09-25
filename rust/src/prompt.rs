@@ -1,7 +1,7 @@
 //! Liquid-compatible prompt rendering with explicit unknown-variable errors.
 use crate::tracker::Issue;
 
-const DEFAULT_PROMPT: &str = "You are working on an issue from the configured tracker.\n\nIdentifier: {{ issue.identifier }}\nTitle: {{ issue.title }}";
+const DEFAULT_PROMPT: &str = "You are working on an issue from the configured tracker.\n\nIdentifier: {{ issue.identifier }}\nTitle: {{ issue.title }}\n\nBody:\n{% if issue.description %}\n{{ issue.description }}\n{% else %}\nNo description provided.\n{% endif %}";
 
 #[derive(Debug, thiserror::Error)]
 pub enum PromptError {
@@ -22,7 +22,11 @@ pub fn render(template: &str, issue: &Issue, attempt: Option<u32>) -> Result<Str
         .build()
         .map_err(|e| PromptError::Template(e.to_string()))?
         .parse(source)
-        .map_err(|e| PromptError::Template(e.to_string()))?;
+        .map_err(|e| {
+            PromptError::Template(format!(
+                "template_parse_error: {e} template=\"<workflow prompt>\""
+            ))
+        })?;
     let globals = liquid::to_object(&serde_json::json!({"issue": issue, "attempt": attempt}))
         .map_err(|e| PromptError::Template(e.to_string()))?;
     parsed
@@ -66,7 +70,9 @@ fn validate_variables(template: &str) -> Result<(), PromptError> {
                     .trim();
                 let valid = variable == "attempt"
                     || matches!(
-                        variable.strip_prefix("issue."),
+                        variable
+                            .strip_prefix("issue.")
+                            .and_then(|path| path.split('.').next()),
                         Some(
                             "id" | "native_ref"
                                 | "identifier"
@@ -137,5 +143,36 @@ mod tests {
                 .unwrap()
                 .contains("Identifier: S-1")
         );
+    }
+    #[test]
+    fn reference_default_and_contextual_liquid() {
+        let present = render("", &issue(), None).unwrap();
+        assert!(present.contains("Body:\n\nBody"));
+        let mut absent = issue();
+        absent.description = None;
+        assert!(
+            render("", &absent, None)
+                .unwrap()
+                .contains("No description provided.")
+        );
+        let rendered = render(
+            "{{ issue.created_at }}|{{ issue.native_ref.project }}|{{ issue.labels | join: ',' }}",
+            &Issue {
+                created_at: Some("2026-02-26T18:06:48Z".into()),
+                native_ref: Some(serde_json::json!({"project": "p1"})),
+                ..issue()
+            },
+            None,
+        )
+        .unwrap();
+        assert_eq!(rendered, "2026-02-26T18:06:48Z|p1|backend");
+        assert!(matches!(
+            render("{{ missing.ticket_id }}", &issue(), None),
+            Err(PromptError::UnknownVariable(_))
+        ));
+        assert!(matches!(
+            validate("{% if issue.identifier %}"),
+            Err(PromptError::Template(_))
+        ));
     }
 }

@@ -2,7 +2,10 @@
 use crate::workflow::Workflow;
 use serde::Deserialize;
 use serde_json::{Map, Value};
-use std::path::{Path, PathBuf};
+use std::{
+    collections::BTreeMap,
+    path::{Path, PathBuf},
+};
 
 #[derive(Clone, PartialEq, Eq)]
 pub enum TrackerKind {
@@ -56,13 +59,55 @@ pub struct TrackerSettings {
 #[derive(Clone)]
 pub struct Settings {
     pub tracker: TrackerSettings,
+    resolved_scope: Scope,
     pub polling_interval_ms: u64,
     pub workspace_root: PathBuf,
     pub codex_command: String,
     pub max_concurrent_agents: u32,
     pub max_turns: u32,
     pub max_retry_backoff_ms: u64,
+    pub max_concurrent_agents_by_state: BTreeMap<String, u32>,
+    pub worker: WorkerSettings,
+    pub hooks: HooksSettings,
+    pub observability: ObservabilitySettings,
+    pub server: ServerSettings,
+    pub codex: CodexSettings,
     pub prompt_template: String,
+}
+
+#[derive(Clone)]
+pub struct WorkerSettings {
+    pub ssh_hosts: Vec<String>,
+    pub max_concurrent_agents_per_host: Option<u32>,
+}
+#[derive(Clone)]
+pub struct HooksSettings {
+    pub after_create: Option<String>,
+    pub before_run: Option<String>,
+    pub after_run: Option<String>,
+    pub before_remove: Option<String>,
+    pub timeout_ms: u64,
+}
+#[derive(Clone)]
+pub struct ObservabilitySettings {
+    pub dashboard_enabled: bool,
+    pub refresh_ms: u64,
+    pub render_interval_ms: u64,
+}
+#[derive(Clone)]
+pub struct ServerSettings {
+    pub port: Option<u16>,
+    pub host: String,
+}
+#[derive(Clone)]
+pub struct CodexSettings {
+    pub command: String,
+    pub approval_policy: Value,
+    pub thread_sandbox: String,
+    pub turn_sandbox_policy: Option<Map<String, Value>>,
+    pub turn_timeout_ms: u64,
+    pub read_timeout_ms: u64,
+    pub stall_timeout_ms: u64,
 }
 
 #[derive(Clone, PartialEq, Eq)]
@@ -99,6 +144,10 @@ struct RawSettings {
     workspace: RawWorkspace,
     agent: RawAgent,
     codex: RawCodex,
+    worker: RawWorker,
+    hooks: RawHooks,
+    observability: RawObservability,
+    server: RawServer,
 }
 #[derive(Default, Deserialize)]
 #[serde(default)]
@@ -136,6 +185,7 @@ struct RawAgent {
     max_concurrent_agents: u32,
     max_turns: u32,
     max_retry_backoff_ms: u64,
+    max_concurrent_agents_by_state: BTreeMap<String, u32>,
 }
 impl Default for RawAgent {
     fn default() -> Self {
@@ -143,6 +193,7 @@ impl Default for RawAgent {
             max_concurrent_agents: 10,
             max_turns: 20,
             max_retry_backoff_ms: 300_000,
+            max_concurrent_agents_by_state: BTreeMap::new(),
         }
     }
 }
@@ -150,6 +201,69 @@ impl Default for RawAgent {
 #[serde(default)]
 struct RawCodex {
     command: Option<String>,
+    approval_policy: Option<Value>,
+    thread_sandbox: Option<String>,
+    turn_sandbox_policy: Option<Map<String, Value>>,
+    turn_timeout_ms: Option<u64>,
+    read_timeout_ms: Option<u64>,
+    stall_timeout_ms: Option<u64>,
+}
+
+#[derive(Default, Deserialize)]
+#[serde(default)]
+struct RawWorker {
+    ssh_hosts: Vec<String>,
+    max_concurrent_agents_per_host: Option<u32>,
+}
+#[derive(Deserialize)]
+#[serde(default)]
+struct RawHooks {
+    after_create: Option<String>,
+    before_run: Option<String>,
+    after_run: Option<String>,
+    before_remove: Option<String>,
+    timeout_ms: u64,
+}
+impl Default for RawHooks {
+    fn default() -> Self {
+        Self {
+            after_create: None,
+            before_run: None,
+            after_run: None,
+            before_remove: None,
+            timeout_ms: 60_000,
+        }
+    }
+}
+#[derive(Deserialize)]
+#[serde(default)]
+struct RawObservability {
+    dashboard_enabled: bool,
+    refresh_ms: u64,
+    render_interval_ms: u64,
+}
+impl Default for RawObservability {
+    fn default() -> Self {
+        Self {
+            dashboard_enabled: true,
+            refresh_ms: 1_000,
+            render_interval_ms: 16,
+        }
+    }
+}
+#[derive(Deserialize)]
+#[serde(default)]
+struct RawServer {
+    port: Option<u16>,
+    host: String,
+}
+impl Default for RawServer {
+    fn default() -> Self {
+        Self {
+            port: None,
+            host: "127.0.0.1".into(),
+        }
+    }
 }
 
 impl Settings {
@@ -226,27 +340,53 @@ impl Settings {
         } else {
             None
         };
-        let (active_states, terminal_states) = if kind == TrackerKind::Linear {
-            (
-                raw.tracker
-                    .active_states
-                    .unwrap_or_else(|| vec!["Todo".into(), "In Progress".into()]),
-                raw.tracker.terminal_states.unwrap_or_else(|| {
-                    vec![
-                        "Closed".into(),
-                        "Cancelled".into(),
-                        "Canceled".into(),
-                        "Duplicate".into(),
-                        "Done".into(),
-                    ]
-                }),
-            )
-        } else {
-            (
-                raw.tracker.active_states.unwrap_or_default(),
-                raw.tracker.terminal_states.unwrap_or_default(),
-            )
+        let resolve_selector = |key: &str| -> Result<Option<String>, ConfigError> {
+            match provider.get(key) {
+                None | Some(Value::Null) => Ok(None),
+                Some(Value::String(raw)) => {
+                    Ok(env_name(raw).map_or_else(|| Some(raw.clone()), &env))
+                }
+                _ => Err(ConfigError::Invalid("tracker.provider scope selector")),
+            }
         };
+        let organization = resolve_selector("organization_id")?;
+        let project = resolve_selector("project_id")?.or(resolve_selector("project_slug")?);
+        let assignee = if kind == TrackerKind::Linear {
+            resolved_assignee.clone()
+        } else {
+            resolve_selector("assignee")?.or(resolve_selector("assignee_id")?)
+        };
+        if kind == TrackerKind::Linear && project.as_deref().is_none_or(str::is_empty) {
+            return Err(ConfigError::MissingLinearProjectSlug);
+        }
+        let resolved_scope = Scope {
+            kind: kind.as_str(),
+            organization,
+            project,
+            assignee,
+        };
+        let (active_states, terminal_states) =
+            if matches!(kind, TrackerKind::Linear | TrackerKind::Memory) {
+                (
+                    raw.tracker
+                        .active_states
+                        .unwrap_or_else(|| vec!["Todo".into(), "In Progress".into()]),
+                    raw.tracker.terminal_states.unwrap_or_else(|| {
+                        vec![
+                            "Closed".into(),
+                            "Cancelled".into(),
+                            "Canceled".into(),
+                            "Duplicate".into(),
+                            "Done".into(),
+                        ]
+                    }),
+                )
+            } else {
+                (
+                    raw.tracker.active_states.unwrap_or_default(),
+                    raw.tracker.terminal_states.unwrap_or_default(),
+                )
+            };
         if kind != TrackerKind::Memory && (active_states.is_empty() || terminal_states.is_empty()) {
             return Err(ConfigError::Invalid(
                 "tracker.active_states/terminal_states",
@@ -260,6 +400,27 @@ impl Settings {
             || raw.agent.max_retry_backoff_ms == 0
         {
             return Err(ConfigError::Invalid("agent limits"));
+        }
+        let mut state_limits = BTreeMap::new();
+        for (state, limit) in raw.agent.max_concurrent_agents_by_state {
+            let key = state.trim().to_lowercase();
+            if key.is_empty() || limit == 0 || state_limits.insert(key, limit).is_some() {
+                return Err(ConfigError::Invalid("agent.max_concurrent_agents_by_state"));
+            }
+        }
+        if raw.worker.max_concurrent_agents_per_host == Some(0) {
+            return Err(ConfigError::Invalid(
+                "worker.max_concurrent_agents_per_host",
+            ));
+        }
+        if raw.hooks.timeout_ms == 0 {
+            return Err(ConfigError::Invalid("hooks.timeout_ms"));
+        }
+        if raw.observability.refresh_ms == 0 || raw.observability.render_interval_ms == 0 {
+            return Err(ConfigError::Invalid("observability intervals"));
+        }
+        if raw.codex.turn_timeout_ms == Some(0) || raw.codex.read_timeout_ms == Some(0) {
+            return Err(ConfigError::Invalid("codex timeouts"));
         }
         let codex_command = raw
             .codex
@@ -290,12 +451,29 @@ impl Settings {
                 .unwrap_or_else(|| Path::new("."))
                 .join(workspace_root)
         };
-        let required_labels = raw
+        let mut required_labels = Vec::new();
+        for label in raw
             .tracker
             .required_labels
             .into_iter()
             .map(|s| s.trim().to_lowercase())
-            .collect();
+        {
+            if !required_labels.contains(&label) {
+                required_labels.push(label);
+            }
+        }
+        let codex = CodexSettings {
+            command: codex_command.clone(),
+            approval_policy: raw.codex.approval_policy.unwrap_or_else(|| serde_json::json!({"reject": {"sandbox_approval": true, "rules": true, "mcp_elicitations": true}})),
+            thread_sandbox: raw.codex.thread_sandbox.unwrap_or_else(|| "workspace-write".into()),
+            turn_sandbox_policy: raw.codex.turn_sandbox_policy,
+            turn_timeout_ms: raw.codex.turn_timeout_ms.unwrap_or(3_600_000),
+            read_timeout_ms: raw.codex.read_timeout_ms.unwrap_or(5_000),
+            stall_timeout_ms: raw.codex.stall_timeout_ms.unwrap_or(300_000),
+        };
+        if !codex.approval_policy.is_string() && !codex.approval_policy.is_object() {
+            return Err(ConfigError::Invalid("codex.approval_policy"));
+        }
         Ok(Self {
             tracker: TrackerSettings {
                 kind,
@@ -307,30 +485,41 @@ impl Settings {
                 terminal_states,
                 secret_environment_names,
             },
+            resolved_scope,
             polling_interval_ms: raw.polling.interval_ms,
             workspace_root,
             codex_command,
             max_concurrent_agents: raw.agent.max_concurrent_agents,
             max_turns: raw.agent.max_turns,
             max_retry_backoff_ms: raw.agent.max_retry_backoff_ms,
+            max_concurrent_agents_by_state: state_limits,
+            worker: WorkerSettings {
+                ssh_hosts: raw.worker.ssh_hosts,
+                max_concurrent_agents_per_host: raw.worker.max_concurrent_agents_per_host,
+            },
+            hooks: HooksSettings {
+                after_create: raw.hooks.after_create,
+                before_run: raw.hooks.before_run,
+                after_run: raw.hooks.after_run,
+                before_remove: raw.hooks.before_remove,
+                timeout_ms: raw.hooks.timeout_ms,
+            },
+            observability: ObservabilitySettings {
+                dashboard_enabled: raw.observability.dashboard_enabled,
+                refresh_ms: raw.observability.refresh_ms,
+                render_interval_ms: raw.observability.render_interval_ms,
+            },
+            server: ServerSettings {
+                port: raw.server.port,
+                host: raw.server.host,
+            },
+            codex,
             prompt_template: workflow.prompt_template.clone(),
         })
     }
 
     pub fn scope(&self) -> Scope {
-        let value = |key: &str| {
-            self.tracker
-                .provider
-                .get(key)
-                .and_then(Value::as_str)
-                .map(str::to_owned)
-        };
-        Scope {
-            kind: self.tracker.kind.as_str(),
-            organization: value("organization_id"),
-            project: value("project_id").or_else(|| value("project_slug")),
-            assignee: value("assignee").or_else(|| value("assignee_id")),
-        }
+        self.resolved_scope.clone()
     }
 }
 
@@ -410,5 +599,71 @@ mod tests {
                     .is_err()
             );
         }
+    }
+    #[test]
+    fn retains_existing_runtime_policy_with_reference_defaults() {
+        let source = "---\ntracker:\n  kind: memory\n  required_labels: [' Symphony ', SYMPHONY, '', JavaScript]\nworker:\n  ssh_hosts: [worker-01]\n  max_concurrent_agents_per_host: 2\nagent:\n  max_concurrent_agents_by_state: {Todo: 1, 'In Progress': 4}\ncodex:\n  approval_policy: {reject: {sandbox_approval: true}}\n  thread_sandbox: read-only\n  turn_sandbox_policy: {type: readOnly, networkAccess: false}\n  turn_timeout_ms: 1000\n  read_timeout_ms: 500\n  stall_timeout_ms: 0\nhooks:\n  before_run: echo synthetic\n  timeout_ms: 1200\nobservability:\n  dashboard_enabled: false\n  refresh_ms: 2000\n  render_interval_ms: 20\nserver:\n  port: 4321\n  host: 127.0.0.2\n---\n";
+        let wf = workflow::parse(source).unwrap();
+        let settings =
+            Settings::from_workflow_with_env(&wf, Path::new("WORKFLOW.md"), |_| None).unwrap();
+        assert_eq!(
+            settings.tracker.required_labels,
+            ["symphony", "", "javascript"]
+        );
+        assert_eq!(settings.max_concurrent_agents_by_state["todo"], 1);
+        assert_eq!(settings.max_concurrent_agents_by_state["in progress"], 4);
+        assert_eq!(settings.worker.ssh_hosts, ["worker-01"]);
+        assert_eq!(settings.worker.max_concurrent_agents_per_host, Some(2));
+        assert_eq!(settings.hooks.before_run.as_deref(), Some("echo synthetic"));
+        assert_eq!(settings.hooks.timeout_ms, 1200);
+        assert!(!settings.observability.dashboard_enabled);
+        assert_eq!(settings.observability.refresh_ms, 2000);
+        assert_eq!(settings.server.port, Some(4321));
+        assert_eq!(
+            settings.codex.approval_policy["reject"]["sandbox_approval"],
+            true
+        );
+        assert_eq!(settings.codex.thread_sandbox, "read-only");
+        assert_eq!(
+            settings.codex.turn_sandbox_policy.as_ref().unwrap()["type"],
+            "readOnly"
+        );
+        assert_eq!(settings.codex.stall_timeout_ms, 0);
+        assert_eq!(settings.codex.read_timeout_ms, 500);
+        assert_eq!(settings.codex.turn_timeout_ms, 1000);
+    }
+    #[test]
+    fn rejects_invalid_policy_values_without_echoing_secret() {
+        let secret = "synthetic-never-log-credential";
+        for tail in [
+            "worker: {max_concurrent_agents_per_host: 0}",
+            "agent: {max_concurrent_agents_by_state: {Todo: 0}}",
+            "codex: {turn_sandbox_policy: bad}",
+            "hooks: {timeout_ms: 0}",
+            "observability: {refresh_ms: 0}",
+            "codex: {read_timeout_ms: 0}",
+        ] {
+            let source = format!(
+                "---\ntracker: {{kind: linear, project_slug: p, api_key: {secret}}}\n{tail}\n---\n"
+            );
+            let wf = workflow::parse(&source).unwrap();
+            let error =
+                match Settings::from_workflow_with_env(&wf, Path::new("WORKFLOW.md"), |_| None) {
+                    Ok(_) => panic!("invalid policy accepted"),
+                    Err(error) => error,
+                };
+            assert!(!error.to_string().contains(secret));
+        }
+        let wf = workflow::parse(
+            "---\ntracker: {kind: linear, project_slug: p, api_key: '$MISSING_TEST_SECRET'}\n---\n",
+        )
+        .unwrap();
+        let error = match Settings::from_workflow_with_env(&wf, Path::new("WORKFLOW.md"), |_| None)
+        {
+            Ok(_) => panic!("missing secret accepted"),
+            Err(error) => error,
+        };
+        assert!(matches!(error, ConfigError::MissingLinearApiToken));
+        assert!(!error.to_string().contains("MISSING_TEST_SECRET"));
     }
 }
