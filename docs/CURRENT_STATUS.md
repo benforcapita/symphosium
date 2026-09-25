@@ -36,3 +36,9 @@ PM read R05_REPAIR_CYCLE1_EVIDENCE.md and verified patch SHA-256 0a93a0bbab73a52
 Correction to S2-R05-005: reference elixir/lib/symphony_elixir/cli.ex lines 165 and 173 explicitly permit port >= 0. PM verified these lines. Port zero acceptance is compatible; do not require its rejection. Remaining CLI validation and startup override behavior still require review.
 
 All five findings remain open pending Senior2 re-review and QA2 on the repaired integrated SHA. No failed repair/retest cycle recorded yet. Operations is next owner to apply/checkpoint, then PM routes exact revision to reviewers. R05 remains Changes Required; dependent integration remains gated. Developer estimates remaining checkpoint/review 2.5–5 hours plus review reserve, excluding further rework; this is provisional, not a schedule commitment.
+
+## Operations repair-cycle-1 integration — 2026-09-26
+
+Senior1 patch SHA-256 `0a93a0bbab73a52ea36804d997440c88b2d796cb79527ec5fd7fe0fa64908c11` is integrated locally at `5cdd34add5386fba03514133bbefe738489edd11` on `ops/symphosium-s0`. Operations reproduced pinned Rust 1.97.1 fmt, strict Clippy, all 17 library/review-contract tests, release build and synthetic/no-secret CLI cases; detailed commands/results are in `docs/OPS_R05_REPAIR_CYCLE1_CHECKPOINT.md`. PM's exact pre-integration status snapshot is preserved in `docs/provenance/pm-repair-cycle1/CURRENT_STATUS.md`; PM source files were not modified.
+
+R05 remains Changes Required. All five Senior2 findings are open pending Senior2 re-review and QA2 retest on the integrated code SHA. This Operations checkpoint does not close defects or provide product acceptance. No push/tag/release or downstream assignment was made.
