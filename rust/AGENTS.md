@@ -1,0 +1,3 @@
+# Rust implementation conventions
+
+Use `cargo fmt --all -- --check`, `cargo clippy --all-targets --all-features -- -D warnings`, `cargo test --all-features`, and `cargo build --release --locked` before handoff. Keep typed domain and adapter contracts in the library; the binary stays thin. Never log workflow secrets or inject them into agent environments. Configuration reloads are all-or-nothing and must retain the last known good snapshot on error. Tests use synthetic values and must not contact live trackers or model endpoints. This directory is the Rust runtime; `elixir/` remains the untouched reference.
