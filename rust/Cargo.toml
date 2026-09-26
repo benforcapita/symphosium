@@ -10,6 +10,10 @@ serde_json = "1"
 serde_yaml = "0.9"
 liquid = "0.26"
 thiserror = "2"
+sqlx = { version = "0.8.6", default-features = false, features = ["runtime-tokio-rustls", "postgres", "uuid", "chrono", "migrate", "macros"] }
+tokio = { version = "1", features = ["rt", "rt-multi-thread", "macros"] }
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
 
 [dev-dependencies]
 tempfile = "3"

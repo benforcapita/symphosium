@@ -1,0 +1,17 @@
+DROP FUNCTION IF EXISTS seed_standard_workflow_states(uuid, uuid);
+DROP FUNCTION IF EXISTS add_ticket_dependency(uuid, uuid, uuid);
+DROP FUNCTION IF EXISTS create_ticket(uuid, uuid, uuid, uuid, text);
+DROP TABLE IF EXISTS run_attempts;
+DROP TABLE IF EXISTS mutation_keys;
+DROP TABLE IF EXISTS activity;
+DROP TABLE IF EXISTS comments;
+DROP TABLE IF EXISTS dependencies;
+DROP TABLE IF EXISTS ticket_labels;
+DROP TABLE IF EXISTS labels;
+DROP TABLE IF EXISTS tickets;
+DROP TABLE IF EXISTS workflow_states;
+DROP TABLE IF EXISTS projects;
+DROP TABLE IF EXISTS teams;
+DROP TABLE IF EXISTS sessions;
+DROP TABLE IF EXISTS users;
+DROP TABLE IF EXISTS organizations;
