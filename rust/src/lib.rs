@@ -2,6 +2,7 @@
 pub mod cli;
 pub mod config;
 pub mod prompt;
+pub mod providers;
 pub mod reload;
 pub mod tracker;
 pub mod workflow;
