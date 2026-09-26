@@ -30,3 +30,9 @@ No live provider, model, real token, paid service, release tag, or production me
 ## Review boundary and next owner
 
 This Operations checkpoint does not issue a QA or whole-ticket acceptance verdict. Senior2 must independently review the integrated revision, then QA2 must rerun the three R09 adversarial regressions and the locked suite against the exact Operations-published SHA. Four other provider adapters, native tools, factory bindings, and full R09 parity remain open. R06 remains Changes Required pending its repair cycle; its review artifacts were preserved in the parent development commit.
+
+## QA2 follow-up — 2026-09-26
+
+QA2 independently retested the exact code revision `3fa6277cef63e991d7cbb27c872729c39b72e9e3` in a detached, clean checkout and returned **Pass** for S2-R09-001/002/003 with no new defect. The exact report is preserved under `docs/provenance/QA2_R09_REPAIR1_RETEST.md`; a whitespace-clean publication copy is `docs/QA2_R09_REPAIR1_RETEST.md` (source SHA-256 `55dbcdc0552057dd0e7be26594785e6ab8c078f8d4ebadbbdab4cd14d4b8403e`). It records 3/3 security regressions, 28/28 full-suite tests, format, strict Clippy, and locked offline release build passing. Synthetic loopback only; no live provider/model/token or paid service.
+
+This supersedes the next-owner handoff above for these three bounded repair findings only. It does not accept full R09 or a release: other providers, native tools/authorization, full GitHub reference coverage, and adapter-factory bindings remain open. The tested code SHA remains `3fa6277cef63e991d7cbb27c872729c39b72e9e3`; this follow-up is documentation only.
