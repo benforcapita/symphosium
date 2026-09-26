@@ -11,23 +11,33 @@ const MAX_PAGES: usize = 1000;
 
 pub struct GithubTracker {
     client: reqwest::Client,
-    base: String,
+    base: reqwest::Url,
     repo: String,
     token: String,
 }
 
 impl GithubTracker {
     pub fn new(base: &str, repo: &str, token: &str) -> Result<Self, TrackerError> {
-        let valid_base = base.starts_with("https://")
-            || base.starts_with("http://127.0.0.1:")
-            || base.starts_with("http://[::1]:");
-        if !valid_base {
+        let base = reqwest::Url::parse(base)
+            .map_err(|_| TrackerError::Config("invalid_github_api_url".into()))?;
+        let valid_scheme = base.scheme() == "https"
+            || (base.scheme() == "http" && matches!(base.host_str(), Some("127.0.0.1" | "[::1]")));
+        if !valid_scheme
+            || !base.username().is_empty()
+            || base.password().is_some()
+            || base.fragment().is_some()
+            || base.query().is_some()
+            || base.host_str().is_none()
+        {
             return Err(TrackerError::Config("invalid_github_api_url".into()));
         }
         if repo.split('/').count() != 2
-            || repo
-                .split('/')
-                .any(|part| part.is_empty() || part.chars().any(char::is_whitespace))
+            || repo.split('/').any(|part| {
+                part.is_empty()
+                    || part == "."
+                    || part == ".."
+                    || part.chars().any(char::is_whitespace)
+            })
         {
             return Err(TrackerError::Config("invalid_github_repo".into()));
         }
@@ -36,21 +46,36 @@ impl GithubTracker {
         }
         let client = reqwest::Client::builder()
             .timeout(Duration::from_secs(30))
+            .redirect(reqwest::redirect::Policy::none())
             .build()
             .map_err(|_| TrackerError::Config("github_http_client".into()))?;
         Ok(Self {
             client,
-            base: base.trim_end_matches('/').into(),
+            base,
             repo: repo.into(),
             token: token.into(),
         })
     }
 
-    fn issue_path(&self) -> String {
-        format!("{}/repos/{}/issues", self.base, self.repo)
+    fn issue_path(&self) -> reqwest::Url {
+        let mut url = self.base.clone();
+        let mut segments = url.path_segments_mut().expect("validated hierarchical URL");
+        segments.pop_if_empty();
+        let mut parts = self.repo.split('/');
+        segments
+            .push("repos")
+            .push(parts.next().unwrap())
+            .push(parts.next().unwrap())
+            .push("issues");
+        drop(segments);
+        url
     }
 
-    async fn get(&self, url: &str, allow_missing: bool) -> Result<Option<Value>, TrackerError> {
+    async fn get(
+        &self,
+        url: reqwest::Url,
+        allow_missing: bool,
+    ) -> Result<Option<Value>, TrackerError> {
         let response = self
             .client
             .get(url)
@@ -89,12 +114,15 @@ impl GithubTracker {
         let mut output = Vec::new();
         let mut seen = HashSet::new();
         for page in 1..=MAX_PAGES {
-            let url = format!(
-                "{}?state={state}&per_page={PAGE_SIZE}&page={page}&sort=created&direction=asc",
-                self.issue_path()
-            );
+            let mut url = self.issue_path();
+            url.query_pairs_mut()
+                .append_pair("state", state)
+                .append_pair("per_page", &PAGE_SIZE.to_string())
+                .append_pair("page", &page.to_string())
+                .append_pair("sort", "created")
+                .append_pair("direction", "asc");
             let body = self
-                .get(&url, false)
+                .get(url, false)
                 .await?
                 .ok_or_else(|| TrackerError::Payload("github_unknown_payload".into()))?;
             let items = body
@@ -129,8 +157,11 @@ impl GithubTracker {
             if !seen.insert(number) {
                 continue;
             }
-            let url = format!("{}/{number}", self.issue_path());
-            if let Some(raw) = self.get(&url, true).await? {
+            let mut url = self.issue_path();
+            url.path_segments_mut()
+                .expect("validated hierarchical URL")
+                .push(&number.to_string());
+            if let Some(raw) = self.get(url, true).await? {
                 let issue = normalize(&raw, &self.repo)?;
                 if issue.id == number.to_string() {
                     output.push(issue);
