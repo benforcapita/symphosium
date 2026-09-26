@@ -185,7 +185,7 @@ struct RawAgent {
     max_concurrent_agents: u32,
     max_turns: u32,
     max_retry_backoff_ms: u64,
-    max_concurrent_agents_by_state: BTreeMap<String, u32>,
+    max_concurrent_agents_by_state: serde_yaml::Mapping,
 }
 impl Default for RawAgent {
     fn default() -> Self {
@@ -193,7 +193,7 @@ impl Default for RawAgent {
             max_concurrent_agents: 10,
             max_turns: 20,
             max_retry_backoff_ms: 300_000,
-            max_concurrent_agents_by_state: BTreeMap::new(),
+            max_concurrent_agents_by_state: serde_yaml::Mapping::new(),
         }
     }
 }
@@ -402,10 +402,18 @@ impl Settings {
             return Err(ConfigError::Invalid("agent limits"));
         }
         let mut state_limits = BTreeMap::new();
+        // SPEC §5.3.5: malformed entries do not invalidate otherwise usable settings.
+        // Source order gives a deterministic last-valid-value result for normalized duplicates.
         for (state, limit) in raw.agent.max_concurrent_agents_by_state {
+            let Some(state) = state.as_str() else {
+                continue;
+            };
             let key = state.trim().to_lowercase();
-            if key.is_empty() || limit == 0 || state_limits.insert(key, limit).is_some() {
-                return Err(ConfigError::Invalid("agent.max_concurrent_agents_by_state"));
+            let Some(limit) = limit.as_u64().and_then(|n| u32::try_from(n).ok()) else {
+                continue;
+            };
+            if !key.is_empty() && limit > 0 {
+                state_limits.insert(key, limit);
             }
         }
         if raw.worker.max_concurrent_agents_per_host == Some(0) {
@@ -637,7 +645,6 @@ mod tests {
         let secret = "synthetic-never-log-credential";
         for tail in [
             "worker: {max_concurrent_agents_per_host: 0}",
-            "agent: {max_concurrent_agents_by_state: {Todo: 0}}",
             "codex: {turn_sandbox_policy: bad}",
             "hooks: {timeout_ms: 0}",
             "observability: {refresh_ms: 0}",

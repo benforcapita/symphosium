@@ -17,16 +17,8 @@ pub fn render(template: &str, issue: &Issue, attempt: Option<u32>) -> Result<Str
     } else {
         template
     };
-    validate(source)?;
-    let parsed = liquid::ParserBuilder::with_stdlib()
-        .build()
-        .map_err(|e| PromptError::Template(e.to_string()))?
-        .parse(source)
-        .map_err(|e| {
-            PromptError::Template(format!(
-                "template_parse_error: {e} template=\"<workflow prompt>\""
-            ))
-        })?;
+    validate_variables(source)?;
+    let parsed = parse_template(source)?;
     let globals = liquid::to_object(&serde_json::json!({"issue": issue, "attempt": attempt}))
         .map_err(|e| PromptError::Template(e.to_string()))?;
     parsed
@@ -41,12 +33,20 @@ pub fn validate(template: &str) -> Result<(), PromptError> {
         template
     };
     validate_variables(source)?;
+    parse_template(source)?;
+    Ok(())
+}
+
+fn parse_template(source: &str) -> Result<liquid::Template, PromptError> {
     liquid::ParserBuilder::with_stdlib()
         .build()
         .map_err(|e| PromptError::Template(e.to_string()))?
         .parse(source)
-        .map_err(|e| PromptError::Template(e.to_string()))?;
-    Ok(())
+        .map_err(|_| {
+            PromptError::Template(
+                "template_parse_error: invalid Liquid syntax template=\"<workflow prompt>\"".into(),
+            )
+        })
 }
 
 fn validate_variables(template: &str) -> Result<(), PromptError> {
