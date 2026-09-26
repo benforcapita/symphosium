@@ -1,44 +1,22 @@
 # Symphosium delivery status — 2026-09-26
 
-Latest disposition: R05 **Changes Required** following Senior2 technical review (one High and four Medium findings; three reproduced failures). Repair cycle 1 routed to Senior1; see R05_REPAIR_ROUTING.md. Operations reports latest local documentation checkpoint 3d1575da917587c9795090f0dc8e51f4de1a990d, code f64fa76ca47becb426defaf13d7925d1665b1cb7. Independent R05 QA has not accepted this revision. This disposition supersedes the earlier Ready/Review entries below. R06/R07 integration remains dependent on repaired foundation contracts.
+## Current disposition
 
-This current snapshot supersedes historical blocker/status prose in earlier planning logs; backlog acceptance requirements remain unchanged under canonical LLD3.
+R05 (foundation) is **Accepted** by independent QA2 at the exact tested integrated revision `23b3f7f1a14eca8ed27b3812d9db10437149fb98`. Senior2 technical review and QA2 acceptance evidence are preserved in `R05_CYCLE2_TECHNICAL_REVIEW.md` and `QA2_R05_FOUNDATION_ACCEPTANCE.md`. QA2 reports all five R05 findings closed, with no open critical/high/medium defects and no new low defect recorded. This acceptance applies only to R05 foundation at that SHA; it is not full product, sprint, release, or canonical-main acceptance.
 
-R01 Accepted (stage0 mapping only) and R02 Accepted (bounded feasibility only) by independent QA2 on cd2a7e98eaddfa988e093371ec1e227779a9a50f. Evidence: QA2_S0_R01_R02_GATE_REVIEW.md SHA256 e87d98dc538bfb4e4c1ca4bcbbc5adf66940fe042ceef9caa5166df99986be2e in QA2 existing workspace. PM read full report. Five regular tests plus independent disposable PostgreSQL probe, fmt/clippy/run/release passed. Four prior fixture defects closed; no open critical/high/medium blocks this readiness gate. Not a release/sprint product acceptance.
+The earlier R05 Changes Required/pending-review status is retained byte-for-byte at `provenance/pre-r05-acceptance/CURRENT_STATUS.md` and `provenance/pre-r05-acceptance/RESUMPTION_STATUS.md`. Those records describe earlier points in the repair/review sequence and are superseded by this current snapshot and the final review/QA artifacts. The latest PM source snapshot is imported as `RESUMPTION_STATUS.md`.
 
-R00 canonical-linked preservation/integration complete for discovery; final source checkout integration still required at product delivery. R03 design resolved and QA1 mapped/reviewed. R04 inventory incorporated into accepted R01 discovery; Elixir regression execution remains a later mandatory gate. R05 Ready/assigned Senior1, reviewer Senior2, QA2 independent owner. R06–R18/R20 Backlog per dependencies. R19 In Progress alongside development.
+## Current assignments
 
-R05 scope: one production Cargo package under rust/, pinned toolchain/lock, typed Issue/Tracker boundary, validated config and WORKFLOW front matter/defaults/aliases/env/Liquid errors, immutable generation and all-or-nothing reload interface including claim-aware scope rejection, CLI contract and no-DB external-mode startup. Implement actual modules/tests, not copied spike assertions. No invented successful adapter operations before R09; no scheduler dispatch before runtime gate. Preserve Elixir/reference and notices. Write rust/AGENTS.md, README and WORKFLOW example. Validate R05 mapped scenarios and actual fmt/clippy/unit/build/CLI smoke, then Operations checkpoint and Senior2 review/QA2 on integrated SHA. Senior1 reserves 20% review capacity; estimate 4–7 person-days remains provisional.
+- **R06** — Ready; Mid Developer 1 implementation, Senior Developer 1 technical review, QA Engineer 2 independent acceptance. R07 remains gated on R06 acceptance.
+- **R09** — Ready; Senior Developer 1 implementation, Senior Developer 2 technical review, QA Engineer 2 independent acceptance. It may proceed concurrently with R06 because its recorded dependencies are satisfied.
 
-Dependencies R06/R07 follow stable foundation contracts. Stage0 acceptance clears discovery prerequisite only. Later license/notice obligations (MPL/CDLA included), all-target packaging, full reference parity, production auth/worker isolation, DB concurrency, browser/accessibility/performance and R19 gates remain open. No paid spend/hire. Conservative remaining forecast unrebaselined at 81–138 total person-days; not calendar promise.
+These are PM assignments, not claims that either ticket has started or passed. See `RESUMPTION_STATUS.md` for the current relative sequencing, effort baseline and remaining dependencies.
 
-Canonical final repository: /Users/benblum/.openmausbot/task-workspaces/d6f30c19-02d5-4618-a1fe-3ce7aec47fd1/5f84a53f-c70a-4bd5-8fb4-338abf6c691d/symphony-linear.
-Accepted base worktree: /Users/benblum/.openmausbot/task-workspaces/cd435acf-e060-4630-82c2-2ae4213094bd/dba89769-72e3-4634-85e4-5ec2690e52af/symphosium-s0, branch ops/symphosium-s0.
-Origin verified benforcapita/symphosium; last push blocked by unavailable GitHub username. Local committed work continues. No release tag or publication claim.
+## Remaining project gates
 
-## R05 first implementation return
+R05 acceptance does not complete the project. R19 integrated acceptance, all remaining ticket and security/browser/build requirements, and zero critical/high/medium defects are still required before canonical-main integration and any release commit/tag. No main integration, release tag or release is recorded here. No paid spend or live provider/model test was part of this documentation checkpoint.
 
-Senior1 delivered 15 new rust/ files (1561 staged lines including lockfile) on isolated s1/r05-foundation from cd2a7e9; PM inspected staged diff and CLI/reload source. R05 state Review, not Accepted. Developer reports fmt/clippy/9 tests/release and synthetic-token CLI validation passed; independent review pending. CLI currently validates then exits and explicitly says orchestration unavailable. This is a foundation increment, not a runnable scheduler/product. Review must check full R05 contract coverage and intended deferrals rather than equating 9 passing tests with completion.
+## Operations checkpoint scope
 
-Operations readiness-doc checkpoint febc0aec82b9bc8f75f4ccee3c770168c1c68987 reported; R05 patch awaits integration. Next owner Operations checkpoint, Senior2 technical review, then QA2 integrated acceptance. R06 remains dependency-gated. No source/reference overwrites or push claims.
-
-## Operations R05 integration checkpoint — 2026-09-26
-
-Operations integrated the supplied Senior1 patch (SHA-256 `47bb91a5cb1389d83658b8ea44891716044b4e0c2fa3c427facad75fa50bf03b`) as local code checkpoint `f64fa76ca47becb426defaf13d7925d1665b1cb7` on `ops/symphosium-s0`, parent `febc0aec82b9bc8f75f4ccee3c770168c1c68987`. The diff contains only 15 new `rust/` files (1,561 insertions). Integrated fmt, clippy, all 9 library tests, release build, and synthetic-key `--check` CLI smoke passed offline on Rust 1.97.1/Darwin arm64. Omitting `--check` returns the expected R05 dispatch-not-implemented message. Detailed commands/results: `docs/OPS_R05_INTEGRATION.md` in the integration worktree.
-
-R05 remains Review, not Accepted. Senior2 independent review and QA disposition on the integrated SHA remain pending. No product/release acceptance, push, or tag is claimed; no live tracker/model call or paid service was used. Operations made no downstream assignment.
-
-
-## Repair cycle 1 returned — pending integration and retest
-
-PM read R05_REPAIR_CYCLE1_EVIDENCE.md and verified patch SHA-256 0a93a0bbab73a52ea36804d997440c88b2d796cb79527ec5fd7fe0fa64908c11. Six scoped files change: README, CLI, config, prompt, reload and review_contract tests. Developer reports pinned Rust 1.97.1 fmt/clippy/17 tests/release/CLI checks passing; PM did not independently execute those gates. Latest integration HEAD directly verified as 399c8ddc00f829e28c90af06dbb9979f4f3a234b; repair base is 3d1575da917587c9795090f0dc8e51f4de1a990d.
-
-Correction to S2-R05-005: reference elixir/lib/symphony_elixir/cli.ex lines 165 and 173 explicitly permit port >= 0. PM verified these lines. Port zero acceptance is compatible; do not require its rejection. Remaining CLI validation and startup override behavior still require review.
-
-All five findings remain open pending Senior2 re-review and QA2 on the repaired integrated SHA. No failed repair/retest cycle recorded yet. Operations is next owner to apply/checkpoint, then PM routes exact revision to reviewers. R05 remains Changes Required; dependent integration remains gated. Developer estimates remaining checkpoint/review 2.5–5 hours plus review reserve, excluding further rework; this is provisional, not a schedule commitment.
-
-## Operations repair-cycle-1 integration — 2026-09-26
-
-Senior1 patch SHA-256 `0a93a0bbab73a52ea36804d997440c88b2d796cb79527ec5fd7fe0fa64908c11` is integrated locally at `5cdd34add5386fba03514133bbefe738489edd11` on `ops/symphosium-s0`. Operations reproduced pinned Rust 1.97.1 fmt, strict Clippy, all 17 library/review-contract tests, release build and synthetic/no-secret CLI cases; detailed commands/results are in `docs/OPS_R05_REPAIR_CYCLE1_CHECKPOINT.md`. PM's exact pre-integration status snapshot is preserved in `docs/provenance/pm-repair-cycle1/CURRENT_STATUS.md`; PM source files were not modified.
-
-R05 remains Changes Required. All five Senior2 findings are open pending Senior2 re-review and QA2 retest on the integrated code SHA. This Operations checkpoint does not close defects or provide product acceptance. No push/tag/release or downstream assignment was made.
+This checkpoint imports independent review and QA evidence plus the current PM status. It changes documentation only; it does not modify application source or rerun application tests. `OPS_R05_ACCEPTANCE_IMPORT_SHA256.txt` records checksums for the imported artifacts, current status, and preserved prior status snapshots.
